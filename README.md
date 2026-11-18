@@ -1,6 +1,6 @@
 # The Nerd Map
 
-A static website that shows live environmental data on interactive maps: weather, severe weather alerts, hurricanes, wildfires, earthquakes, air quality, humidity, natural events and the aurora.
+A static website that shows live environmental data on interactive maps: weather, severe weather alerts, hurricanes, wildfires, earthquakes, air quality, natural events and the aurora.
 
 ## Running it
 
@@ -19,12 +19,11 @@ Then open http://localhost:8000. Browser geolocation ("Use my current location")
 | `style.css` | Design system shared by every page: tokens, layout, panels, stats, charts, map cards |
 | `common.js` | Shared helpers: icons, formatting, Esri basemaps, the location panel (city search, geolocation, saved location) |
 | `charts.js` | Small dependency-free SVG line and bar charts with hover tooltips |
-| `index.html` + `weather.js` | Current conditions, 24-hour outlook, 7-day forecast, radar and satellite layers |
+| `index.html` + `weather.js` | Current conditions, 24-hour outlook, 7-day forecast, humidity chart; radar (animated), satellite and regional humidity map layers |
 | `severe.html` + `severe.js` | NWS warnings, watches and advisories, local alert text, NHC storm tracks and cones |
 | `wildfires.html` + `wildfires.js` | Active US fire perimeters, largest fires, nearest fire |
 | `seismic.html` + `seismic.js` | M2.5+ earthquakes from the past day or week, strongest and nearest quakes |
 | `air.html` + `air.js` | US AQI, pollutant levels and a 24-hour AQI forecast |
-| `humidity.html` + `humidity.js` | Humidity, dew point, comfort, 24-hour trend and a regional humidity grid |
 | `events.html` + `events.js` | NASA EONET natural events worldwide, with category filters and storm tracks |
 | `aurora.html` + `aurora.js` | NOAA OVATION aurora probability map, viewing chance and Kp index chart |
 | `about.html` | What the site is and where every piece of data comes from |
@@ -48,3 +47,5 @@ All sources are free and need no API key. See `about.html` for details.
 - **Leaflet 1.9.4** (from unpkg) and the **Inter** font (from Google Fonts)
 
 The Traffic and Crime tabs were removed. Traffic APIs (TomTom, HERE and others) and the FBI Crime Data API all require an API key.
+
+`humidity.html` is a redirect stub: the Humidity page was merged into the Weather page, and the stub keeps old links working.

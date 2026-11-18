@@ -74,6 +74,8 @@ function renderCurrent(data) {
       <div class="stat">
         <div class="stat-label">${icon("droplet")}Humidity</div>
         <div class="stat-value">${Math.round(c.relative_humidity_2m)}<span class="stat-unit">%</span></div>
+        <div class="stat-note">Dew point ${deg(c.dew_point_2m)}</div>
+        <div class="stat-note">Feels ${comfortLevel(c.dew_point_2m).toLowerCase()}</div>
       </div>
       <div class="stat">
         <div class="stat-label">${icon("wind")}Wind</div>
@@ -152,9 +154,10 @@ async function fetchWeather(lat, lon) {
     latitude: lat,
     longitude: lon,
     current:
-      "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,is_day," +
+      "temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,precipitation,weather_code,is_day," +
       "wind_speed_10m,wind_direction_10m,wind_gusts_10m",
-    hourly: "temperature_2m,relative_humidity_2m,precipitation,precipitation_probability,weather_code,is_day",
+    hourly:
+      "temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,precipitation_probability,weather_code,is_day",
     daily:
       "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset",
     forecast_days: 7,
@@ -174,13 +177,153 @@ async function fetchWeather(lat, lon) {
     renderCurrent(data);
     renderHourly(data);
     renderDaily(data);
+    renderHumidityChart(data);
   } catch (e) {
     setHtml("currentOut", emptyState("alert", `Couldn't load the weather (${e.message}).`));
     console.error(e);
   }
 }
 
+// ==========================================================================
+// Humidity: comfort level, 24-hour chart and the regional grid map layer
+// ==========================================================================
+// How the air feels, based on dew point (°F).
+function comfortLevel(dewPointF) {
+  if (dewPointF < 40) return "Dry";
+  if (dewPointF < 55) return "Comfortable";
+  if (dewPointF < 60) return "Slightly humid";
+  if (dewPointF < 65) return "Humid";
+  if (dewPointF < 70) return "Muggy";
+  return "Oppressive";
+}
+
+function renderHumidityChart(data) {
+  const { current, hourly } = data;
+  const start = Math.max(0, hourly.time.findIndex((t) => t >= current.time));
+  const points = hourly.time.slice(start, start + 24).map((time, k) => ({
+    time,
+    label: formatHour(time),
+    value: hourly.relative_humidity_2m[start + k],
+    dewPoint: hourly.dew_point_2m[start + k],
+  }));
+
+  const values = points.map((d) => d.value);
+  setText("humiditySub", `Relative humidity ranges from ${Math.min(...values)}% to ${Math.max(...values)}% over the next 24 hours`);
+
+  mountChart($("humidityChart"), {
+    type: "line",
+    data: points,
+    yMax: 100,
+    yTicks: [0, 25, 50, 75, 100],
+    formatValue: (v) => `${v}% humidity`,
+    formatNote: (d) =>
+      `${formatLocalTime(d.time, { weekday: "short", hour: "numeric" })} · dew point ${Math.round(d.dewPoint)}°F, feels ${comfortLevel(d.dewPoint).toLowerCase()}`,
+    labelEvery: 3,
+    ariaLabel: `Relative humidity for the next 24 hours, between ${Math.min(...values)} and ${Math.max(...values)} percent.`,
+  });
+}
+
+// Regional grid: GRID_SIZE × GRID_SIZE points GRID_STEP degrees apart, one Open-Meteo request.
+const GRID_SIZE = 7;
+const GRID_STEP = 0.3;
+
+// Sequential blue ramp (light = dry, dark = humid).
+const HUMIDITY_BINS = [
+  { max: 30, color: "#cde2fb" },
+  { max: 40, color: "#9ec5f4" },
+  { max: 50, color: "#6da7ec" },
+  { max: 60, color: "#3987e5" },
+  { max: 70, color: "#256abf" },
+  { max: 80, color: "#184f95" },
+  { max: Infinity, color: "#0d366b" },
+];
+const humidityColor = (rh) => HUMIDITY_BINS.find((b) => rh < b.max).color;
+
+let humidityGrid = null;
+let currentLocation = null;
+
+async function loadHumidityGrid(location) {
+  const half = (GRID_SIZE - 1) / 2;
+  const cells = [];
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      cells.push({ lat: location.latitude + (row - half) * GRID_STEP, lon: location.longitude + (col - half) * GRID_STEP });
+    }
+  }
+
+  const params = new URLSearchParams({
+    latitude: cells.map((c) => c.lat.toFixed(3)).join(","),
+    longitude: cells.map((c) => c.lon.toFixed(3)).join(","),
+    current: "relative_humidity_2m",
+  });
+
+  setText("humidityNote", "Loading regional humidity…");
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const results = await res.json();
+    if (!$("toggleHumidity")?.checked) return; // switched off while loading
+
+    humidityGrid?.remove();
+    humidityGrid = L.layerGroup(
+      cells.map((cell, i) => {
+        const rh = results[i]?.current?.relative_humidity_2m;
+        const d = GRID_STEP / 2;
+        return L.rectangle(
+          [
+            [cell.lat - d, cell.lon - d],
+            [cell.lat + d, cell.lon + d],
+          ],
+          { color: "#ffffff", weight: 1, fillColor: rh == null ? "#a0a8b5" : humidityColor(rh), fillOpacity: 0.6 }
+        ).bindTooltip(rh == null ? "No data" : `${rh}% humidity`, { sticky: true, className: "cell-tip" });
+      })
+    ).addTo(map);
+    marker?.bringToFront();
+
+    // Zoom so the whole grid is visible.
+    const extent = (half + 0.5) * GRID_STEP;
+    map.fitBounds(
+      [
+        [location.latitude - extent, location.longitude - extent],
+        [location.latitude + extent, location.longitude + extent],
+      ],
+      { padding: [20, 20] }
+    );
+    setText("humidityNote", `${GRID_SIZE}×${GRID_SIZE} points, ~${Math.round(GRID_STEP * 69)} mi apart.`);
+  } catch (e) {
+    console.error(e);
+    setText("humidityNote", `Regional humidity unavailable (${e.message}).`);
+  }
+}
+
+function setupHumidityLayer() {
+  const toggle = $("toggleHumidity");
+  const card = $("humidityLegendCard");
+  if (!toggle) return;
+
+  // Stepped legend: one block per bin, labelled with its lower bound.
+  const labels = ["<30", "30", "40", "50", "60", "70", "80+"];
+  setHtml(
+    "humidityLegend",
+    `<div class="legend-steps">${HUMIDITY_BINS.map((b) => `<span style="background:${b.color}"></span>`).join("")}</div>
+     <div class="legend-steps labels">${labels.map((l) => `<span>${escapeHtml(l)}</span>`).join("")}</div>`
+  );
+
+  toggle.addEventListener("change", () => {
+    if (card) card.hidden = !toggle.checked;
+    if (!toggle.checked) {
+      humidityGrid?.remove();
+      humidityGrid = null;
+      return;
+    }
+    if (currentLocation) loadHumidityGrid(currentLocation);
+    else setText("humidityNote", "Pick a location to map humidity around it.");
+  });
+}
+
 function useLocation(location, source) {
+  currentLocation = location;
+  if ($("toggleHumidity")?.checked) loadHumidityGrid(location);
   const latLng = [location.latitude, location.longitude];
   const label = location.name || "Your location";
 
@@ -368,5 +511,6 @@ async function setupOverlays() {
 document.addEventListener("DOMContentLoaded", () => {
   map = createBaseMap({ center: DEFAULT_CENTER, zoom: 6, basemap: "streets" });
   setupOverlays();
+  setupHumidityLayer();
   setupLocationPanel(useLocation);
 });

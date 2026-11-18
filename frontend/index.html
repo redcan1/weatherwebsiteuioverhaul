@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Weather · The Nerd Map</title>
-  <meta name="description" content="Current conditions, hourly outlook, 7-day forecast and live radar for anywhere on Earth.">
+  <meta name="description" content="Current conditions, hourly outlook, 7-day forecast, humidity and live radar for anywhere on Earth.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="style.css">
 
   <script src="common.js" defer></script>
+  <script src="charts.js" defer></script>
   <script src="weather.js" defer></script>
 </head>
 <body>
@@ -29,7 +30,6 @@
         <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
         <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
         <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
-        <a class="tab" href="humidity.html"><svg data-icon="droplet"></svg><span>Humidity</span></a>
         <a class="tab" href="events.html"><svg data-icon="map"></svg><span>Natural Events</span></a>
         <a class="tab" href="aurora.html"><svg data-icon="sun"></svg><span>Aurora</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
@@ -42,7 +42,7 @@
       <div>
         <p class="eyebrow"><span class="live-dot"></span>Live conditions</p>
         <h1>Weather</h1>
-        <p class="lede">Current conditions, a 24-hour outlook and a 7-day forecast for anywhere on Earth, with live radar and satellite imagery.</p>
+        <p class="lede">Current conditions, a 24-hour outlook, a 7-day forecast and humidity for anywhere on Earth, with live radar, satellite and humidity map layers.</p>
       </div>
       <div class="sources">Data from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a><a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a><a href="https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api" target="_blank" rel="noopener">NASA GIBS</a></div>
     </div>
@@ -91,7 +91,13 @@
               <span id="radarTime" class="radar-time" aria-live="off"></span>
             </div>
             <label class="switch"><input type="checkbox" id="toggleClouds" disabled> Satellite (clouds)</label>
+            <label class="switch"><input type="checkbox" id="toggleHumidity"> Humidity (regional)</label>
             <p id="layerNote" class="map-card-note">Loading layers…</p>
+          </div>
+          <div id="humidityLegendCard" class="map-card" hidden>
+            <div class="map-card-title">Relative humidity (%)</div>
+            <div id="humidityLegend"></div>
+            <p id="humidityNote" class="map-card-note">Pick a location to map humidity around it.</p>
           </div>
         </div>
       </section>
@@ -116,6 +122,18 @@
           </div>
         </div>
         <div id="dailyOut"><div class="empty"><svg data-icon="sun"></svg><p>The weekly forecast appears once you pick a location.</p></div></div>
+      </section>
+    </div>
+
+    <div class="row">
+      <section class="panel" aria-labelledby="humidityHeading">
+        <div class="panel-head">
+          <div>
+            <h2 id="humidityHeading">Humidity</h2>
+            <p id="humiditySub" class="panel-sub">Hourly relative humidity for the next 24 hours</p>
+          </div>
+        </div>
+        <div id="humidityChart"><div class="empty"><svg data-icon="droplet"></svg><p>The humidity trend appears once you pick a location.</p></div></div>
       </section>
     </div>
   </main>

@@ -1345,7 +1345,8 @@ body.map-fullscreen-open {
   text-transform: uppercase;
 }
 
-.map-card .switch + .switch {
+/* "~" not "+": the hidden radar player can sit between two switches */
+.map-card .switch ~ .switch {
   margin-top: 8px;
 }
 
