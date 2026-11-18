@@ -336,31 +336,39 @@ function useLocation(location, source) {
 }
 
 // ==========================================================================
-// Map overlays: RainViewer radar + NASA GIBS GOES-East satellite imagery
+// Map overlays: RainViewer radar + NASA GIBS GOES-East satellite, animated together
+// --------------------------------------------------------------------------
+// One timeline (the radar frame times, past ~2 hours every 10 min) drives both
+// layers. Every frame of a layer that's switched on sits on the map with only the
+// current one visible, so playback never waits for tiles.
 // ==========================================================================
-// --------------------------------------------------------------------------
-// Animated radar: one tile layer per RainViewer frame (past ~2 hours, every 10 min).
-// All frames are on the map while radar is on; only the current one is visible,
-// so playback never waits for tiles.
-// --------------------------------------------------------------------------
 const RADAR_OPACITY = 0.7;
+const SATELLITE_OPACITY = 0.75;
 const FRAME_MS = 500;
 const LAST_FRAME_HOLD_MS = 1500; // pause on "now" before looping
+const SATELLITE_STEP_MIN = 20; // satellite tiles are large, so use every other 10-min frame
 
-const radar = { frames: [], layers: [], index: 0, timer: null };
+const anim = { times: [], index: 0, timer: null }; // timeline in ms
+const radar = { layers: [], on: false };
+const satellite = { times: [], layers: [], forStep: [], on: false }; // forStep[i] -> satellite layer for step i
 
 const clockTime = (date) => date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+const GIBS = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best";
+const GOES_LAYER = "GOES-East_ABI_GeoColor";
+const GOES_MATRIX = "GoogleMapsCompatible_Level7";
 
 async function loadRadarFrames() {
   const res = await fetch("https://api.rainviewer.com/public/weather-maps.json");
   if (!res.ok) throw new Error(`RainViewer HTTP ${res.status}`);
   const data = await res.json();
 
-  radar.frames = data.radar?.past || [];
-  if (radar.frames.length === 0) throw new Error("no radar frames");
+  const frames = data.radar?.past || [];
+  if (frames.length === 0) throw new Error("no radar frames");
 
+  anim.times = frames.map((f) => f.time * 1000);
   // Free RainViewer tiles stop at zoom 7; Leaflet scales them up beyond that.
-  radar.layers = radar.frames.map((frame) =>
+  radar.layers = frames.map((frame) =>
     L.tileLayer(`${data.host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
       opacity: 0,
       zIndex: 3, // above the satellite layer
@@ -369,97 +377,14 @@ async function loadRadarFrames() {
       attribution: '<a href="https://www.rainviewer.com/">RainViewer</a>',
     })
   );
-  radar.index = radar.frames.length - 1;
 }
 
-function showRadarFrame(i) {
-  radar.layers[radar.index]?.setOpacity(0);
-  radar.index = i;
-  radar.layers[i].setOpacity(RADAR_OPACITY);
-
-  const last = radar.frames.length - 1;
-  const slider = $("radarSlider");
-  if (slider) slider.value = String(i);
-  const time = clockTime(new Date(radar.frames[i].time * 1000));
-  setText("radarTime", i === last ? `${time} · latest` : time);
-}
-
-function setRadarPlaying(playing) {
-  clearTimeout(radar.timer);
-  radar.timer = null;
-
-  const button = $("btnRadarPlay");
-  if (button) {
-    button.innerHTML = icon(playing ? "pause" : "play");
-    button.setAttribute("aria-label", playing ? "Pause radar animation" : "Play radar animation");
-    button.title = button.getAttribute("aria-label");
-  }
-  if (!playing) return;
-
-  const step = () => {
-    const next = (radar.index + 1) % radar.frames.length;
-    showRadarFrame(next);
-    radar.timer = setTimeout(step, next === radar.frames.length - 1 ? LAST_FRAME_HOLD_MS : FRAME_MS);
-  };
-  radar.timer = setTimeout(step, FRAME_MS);
-}
-
-// The player (bottom-left card) is greyed out and inactive while radar is off.
-function setRadarPlayerEnabled(enabled) {
-  $("radarPlayer")?.classList.toggle("is-disabled", !enabled);
-  for (const id of ["btnRadarPlay", "radarSlider"]) {
-    const el = $(id);
-    if (el) el.disabled = !enabled;
-  }
-}
-
-function setRadarVisible(visible) {
-  if (visible) {
-    radar.layers.forEach((layer) => layer.addTo(map));
-    showRadarFrame(radar.index);
-  } else {
-    setRadarPlaying(false);
-    radar.layers.forEach((layer) => map.removeLayer(layer));
-  }
-  setRadarPlayerEnabled(visible);
-}
-
-function setupRadarControls() {
-  const toggle = $("toggleRadar");
-  const slider = $("radarSlider");
-  const button = $("btnRadarPlay");
-
-  if (slider) {
-    slider.max = String(radar.frames.length - 1);
-    slider.addEventListener("input", () => {
-      setRadarPlaying(false);
-      showRadarFrame(Number(slider.value));
-    });
-  }
-  button?.addEventListener("click", () => setRadarPlaying(radar.timer === null));
-  setRadarPlaying(false); // draw the play icon
-  showRadarFrame(radar.index); // label the slider with the latest frame time
-  radar.layers[radar.index].setOpacity(0); // ...but stay invisible until radar is on
-
-  if (toggle) {
-    toggle.disabled = false;
-    toggle.addEventListener("change", () => setRadarVisible(toggle.checked));
-  }
-  setRadarPlayerEnabled(false);
-  const player = $("radarPlayer");
-  if (player) player.hidden = false;
-}
-
-const GIBS = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best";
-const GOES_LAYER = "GOES-East_ABI_GeoColor";
-const GOES_MATRIX = "GoogleMapsCompatible_Level7";
-
-// GOES-East frames are every 10 minutes but arrive late and occasionally go missing,
-// so ask GIBS which frames exist (DescribeDomains) and use the newest one.
-async function latestSatelliteTime() {
+// GOES-East frames are every 10 minutes but arrive 30–60 min late and occasionally
+// go missing, so ask GIBS which frames exist (DescribeDomains) instead of guessing.
+async function availableSatelliteTimes(hours) {
   const iso = (date) => date.toISOString().slice(0, 19) + "Z";
   const now = new Date();
-  const from = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+  const from = new Date(now.getTime() - hours * 60 * 60 * 1000);
 
   const res = await fetch(`${GIBS}/1.0.0/${GOES_LAYER}/default/${GOES_MATRIX}/all/${iso(from)}--${iso(now)}.xml`);
   if (!res.ok) throw new Error(`GIBS HTTP ${res.status}`);
@@ -467,30 +392,141 @@ async function latestSatelliteTime() {
   // <Domain> holds comma-separated "start/end/PT10M" ranges or single times.
   const domain = (await res.text()).match(/<Domain>([^<]+)<\/Domain>/)?.[1];
   if (!domain) throw new Error("no satellite frames");
-  const parts = domain.split(",").pop().split("/");
-  return parts.length > 1 ? parts[1] : parts[0];
+
+  const times = [];
+  for (const part of domain.split(",")) {
+    const [start, end, period] = part.split("/");
+    if (!end) {
+      times.push(Date.parse(start));
+      continue;
+    }
+    const stepMs = (Number(period?.match(/PT(\d+)M/)?.[1]) || 10) * 60 * 1000;
+    for (let t = Date.parse(start); t <= Date.parse(end); t += stepMs) times.push(t);
+  }
+  return times.sort((a, b) => a - b);
 }
 
-async function loadSatelliteLayer() {
-  const time = await latestSatelliteTime();
-  const layer = L.tileLayer(`${GIBS}/${GOES_LAYER}/default/${time}/${GOES_MATRIX}/{z}/{y}/{x}.png`, {
-    opacity: 0.75,
-    zIndex: 2, // above the basemap, below radar
-    maxNativeZoom: 7,
-    maxZoom: 19,
-    attribution: '<a href="https://www.earthdata.nasa.gov/gibs">NASA GIBS</a> / NOAA GOES-East',
-  });
-  return { layer, time: new Date(time) };
+async function loadSatelliteFrames() {
+  const available = await availableSatelliteTimes(4);
+  if (available.length === 0) throw new Error("no satellite frames");
+  const onStep = (t) => new Date(t).getUTCMinutes() % SATELLITE_STEP_MIN === 0;
+
+  // Without radar, the satellite frames from the last 2 hours become the timeline.
+  if (anim.times.length === 0) {
+    const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+    anim.times = available.filter((t) => t >= cutoff && onStep(t));
+    if (anim.times.length === 0) anim.times = [available[available.length - 1]];
+  }
+
+  // Pair each step with the latest 20-minute frame at or before it; fall back to
+  // any available frame when a 20-minute one is missing.
+  const thinned = available.filter(onStep);
+  const latestAtOrBefore = (list, t) => {
+    let best = null;
+    for (const s of list) if (s <= t) best = s;
+    return best;
+  };
+  const picks = anim.times.map(
+    (t) => latestAtOrBefore(thinned, t) ?? latestAtOrBefore(available, t) ?? thinned[0] ?? available[0]
+  );
+
+  satellite.times = [...new Set(picks)];
+  satellite.forStep = picks.map((t) => satellite.times.indexOf(t));
+  satellite.layers = satellite.times.map((t) =>
+    L.tileLayer(
+      `${GIBS}/${GOES_LAYER}/default/${new Date(t).toISOString().slice(0, 19)}Z/${GOES_MATRIX}/{z}/{y}/{x}.png`,
+      {
+        opacity: 0,
+        zIndex: 2, // above the basemap, below radar
+        maxNativeZoom: 7,
+        maxZoom: 19,
+        attribution: '<a href="https://www.earthdata.nasa.gov/gibs">NASA GIBS</a> / NOAA GOES-East',
+      }
+    )
+  );
 }
 
-function bindToggle(checkboxId, layer) {
-  const checkbox = $(checkboxId);
-  if (!checkbox) return;
-  checkbox.disabled = false;
-  checkbox.addEventListener("change", () => {
-    if (checkbox.checked) layer.addTo(map);
-    else map.removeLayer(layer);
-  });
+// Show timeline step i on every layer that's switched on.
+function showStep(i) {
+  anim.index = i;
+  radar.layers.forEach((layer, j) => layer.setOpacity(radar.on && j === i ? RADAR_OPACITY : 0));
+  satellite.layers.forEach((layer, j) =>
+    layer.setOpacity(satellite.on && j === satellite.forStep[i] ? SATELLITE_OPACITY : 0)
+  );
+
+  const slider = $("radarSlider");
+  if (slider) slider.value = String(i);
+
+  const stepTime = clockTime(new Date(anim.times[i]));
+  const latest = i === anim.times.length - 1 ? " · latest" : "";
+  const satTime = satellite.layers.length ? clockTime(new Date(satellite.times[satellite.forStep[i]])) : null;
+
+  let label = `${stepTime}${latest}`;
+  if (satellite.on && satTime) label = radar.on ? `Radar ${stepTime} · Satellite ${satTime}` : `Satellite ${satTime}`;
+  setText("radarTime", label);
+}
+
+function setPlaying(playing) {
+  clearTimeout(anim.timer);
+  anim.timer = null;
+
+  const button = $("btnRadarPlay");
+  if (button) {
+    button.innerHTML = icon(playing ? "pause" : "play");
+    button.setAttribute("aria-label", playing ? "Pause animation" : "Play animation");
+    button.title = button.getAttribute("aria-label");
+  }
+  if (!playing) return;
+
+  const step = () => {
+    const next = (anim.index + 1) % anim.times.length;
+    showStep(next);
+    anim.timer = setTimeout(step, next === anim.times.length - 1 ? LAST_FRAME_HOLD_MS : FRAME_MS);
+  };
+  anim.timer = setTimeout(step, FRAME_MS);
+}
+
+// The player (bottom-left card) is greyed out unless radar or satellite is on.
+function refreshPlayer() {
+  const enabled = radar.on || satellite.on;
+  if (!enabled) setPlaying(false);
+  $("radarPlayer")?.classList.toggle("is-disabled", !enabled);
+  for (const id of ["btnRadarPlay", "radarSlider"]) {
+    const el = $(id);
+    if (el) el.disabled = !enabled;
+  }
+  showStep(anim.index);
+}
+
+function setLayerOn(group, on) {
+  group.on = on;
+  group.layers.forEach((layer) => (on ? layer.addTo(map) : map.removeLayer(layer)));
+  refreshPlayer();
+}
+
+function setupAnimationControls() {
+  const slider = $("radarSlider");
+  if (slider) {
+    slider.max = String(anim.times.length - 1);
+    slider.addEventListener("input", () => {
+      setPlaying(false);
+      showStep(Number(slider.value));
+    });
+  }
+  $("btnRadarPlay")?.addEventListener("click", () => setPlaying(anim.timer === null));
+  setPlaying(false); // draw the play icon
+
+  anim.index = anim.times.length - 1;
+  refreshPlayer();
+  const player = $("radarPlayer");
+  if (player) player.hidden = false;
+}
+
+function enableToggle(id, group) {
+  const toggle = $(id);
+  if (!toggle || group.layers.length === 0) return;
+  toggle.disabled = false;
+  toggle.addEventListener("change", () => setLayerOn(group, toggle.checked));
 }
 
 async function setupOverlays() {
@@ -498,22 +534,25 @@ async function setupOverlays() {
 
   try {
     await loadRadarFrames();
-    setupRadarControls();
-    notes.push("Radar covers the past 2 hours");
+    notes.push("Radar and satellite cover the past 2 hours");
   } catch (e) {
     console.error("Radar unavailable:", e);
     notes.push("Radar unavailable");
   }
 
   try {
-    const satellite = await loadSatelliteLayer();
-    bindToggle("toggleClouds", satellite.layer);
-    notes.push(`satellite ${clockTime(satellite.time)} (Americas)`);
+    await loadSatelliteFrames();
+    notes.push("satellite runs 30–60 min behind (Americas only)");
   } catch (e) {
     console.error("Satellite imagery unavailable:", e);
     notes.push("satellite unavailable");
   }
 
+  if (anim.times.length) {
+    setupAnimationControls();
+    enableToggle("toggleRadar", radar);
+    enableToggle("toggleClouds", satellite);
+  }
   setText("layerNote", `${notes.join(" · ")}.`);
 }
 

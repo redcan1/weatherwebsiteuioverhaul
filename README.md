@@ -29,7 +29,7 @@ It overwrites the `.html` files in `frontend/`, so don't edit those by hand. Pag
 | `style.css` | Design system shared by every page: tokens, layout, panels, stats, charts, map cards |
 | `common.js` | Shared helpers: icons, formatting, Esri basemaps, the location panel (city search, geolocation, saved location) |
 | `charts.js` | Small dependency-free SVG line and bar charts with hover tooltips |
-| `index.html` + `weather.js` | Current conditions, 24-hour outlook, 7-day forecast, humidity chart; radar (animated), satellite and regional humidity map layers |
+| `index.html` + `weather.js` | Current conditions, 24-hour outlook, 7-day forecast, humidity chart; radar and satellite (animated together) and regional humidity map layers |
 | `severe.html` + `severe.js` | NWS warnings, watches and advisories, local alert text, NHC storm tracks and cones |
 | `wildfires.html` + `wildfires.js` | Active US fire perimeters, largest fires, nearest fire |
 | `seismic.html` + `seismic.js` | M2.5+ earthquakes from the past day or week, strongest and nearest quakes |
