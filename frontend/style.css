@@ -217,10 +217,15 @@ a {
 }
 
 .header-inner {
+  /* The Log in button is pinned to the window's top-right corner, outside this
+     centered container. Reserve room for it only when the window is too narrow
+     for the container's side margins to hold it, so the tabs never run underneath. */
+  --login-reserve: 144px;
   display: flex;
   align-items: center;
   gap: 24px;
   min-height: var(--header-h);
+  padding-right: clamp(0px, calc(var(--login-reserve) - (100vw - 1280px) / 2), calc(var(--login-reserve) - 16px));
 }
 
 .brand {
@@ -266,11 +271,12 @@ a {
   background: var(--border-strong);
 }
 
-/* Log in button: far right of the header, spaced from the tabs. */
+/* Log in button: pinned to the very top-right corner of the window. */
 .login-btn {
-  flex: none;
+  position: absolute;
+  top: 18px; /* centers the 36px button in the 72px header */
+  right: 16px;
   height: 36px;
-  margin-left: 16px;
   padding: 0 14px;
   text-decoration: none;
 }
@@ -286,22 +292,21 @@ a {
   color: var(--brand);
 }
 
-/* When the tabs no longer fit beside the logo, give them their own full-width row;
-   the Log in button stays top right, next to the logo. */
-@media (max-width: 1320px) {
+/* When the tabs no longer fit beside the logo, give them their own full-width row.
+   Log in stays in the top-right corner, level with the logo, so no room is reserved. */
+@media (max-width: 1160px) {
   .header-inner {
     flex-wrap: wrap;
     gap: 4px 24px;
     padding-block: 8px 6px;
+    padding-right: 0;
   }
 
   .login-btn {
-    order: 2;
-    margin-left: auto;
+    top: 21px; /* level with the logo row */
   }
 
   .tabs {
-    order: 3;
     width: 100%;
     margin-left: 0;
   }
@@ -372,15 +377,13 @@ a {
   color: var(--good);
 }
 
-/* Ten tabs: drop the icons and tighten padding below wide-desktop widths */
-@media (max-width: 1520px) {
-  .tabs .tab .icon {
-    display: none;
-  }
+/* Ten tabs: text only (icons made the row wider than the space beside the logo) */
+.tabs .tab .icon {
+  display: none;
+}
 
-  .tabs .tab {
-    padding: 8px 11px;
-  }
+.tabs .tab {
+  padding: 8px 11px;
 }
 
 /* Category toggles that double as a legend (Natural Events) */
@@ -1842,6 +1845,10 @@ body.map-fullscreen-open {
 
   .brand img {
     height: 44px;
+  }
+
+  .login-btn {
+    top: 12px; /* level with the smaller logo */
   }
 
   .tabs {
