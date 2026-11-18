@@ -180,6 +180,91 @@ a {
   font-weight: 600;
 }
 
+/* Alert dot on the Severe Weather tab (see updateAlertBadge in common.js) */
+.tab {
+  position: relative;
+}
+
+.tab-badge {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* Nine tabs: drop the icons and tighten padding on laptop-width screens */
+@media (max-width: 1320px) {
+  .tabs .tab .icon {
+    display: none;
+  }
+
+  .tabs .tab {
+    padding: 8px 11px;
+  }
+}
+
+/* Category toggles that double as a legend (Natural Events) */
+.filter-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.map-card .switch .swatch {
+  margin-right: -4px;
+}
+
+/* Radar animation player (Weather map) */
+.radar-player {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.radar-player[hidden] {
+  display: none;
+}
+
+.radar-player .btn-icon {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+}
+
+.radar-player .btn-icon:hover {
+  background: var(--brand-hover);
+}
+
+.radar-player .btn-icon .icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.radar-player input[type="range"] {
+  width: 100%;
+  accent-color: var(--brand);
+}
+
+.radar-time {
+  grid-column: 2;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ==========================================================================
    Page layout
    ========================================================================== */

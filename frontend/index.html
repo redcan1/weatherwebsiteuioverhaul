@@ -30,6 +30,8 @@
         <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
         <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
         <a class="tab" href="humidity.html"><svg data-icon="droplet"></svg><span>Humidity</span></a>
+        <a class="tab" href="events.html"><svg data-icon="map"></svg><span>Natural Events</span></a>
+        <a class="tab" href="aurora.html"><svg data-icon="sun"></svg><span>Aurora</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
       </nav>
     </div>
@@ -83,6 +85,11 @@
           <div class="map-card">
             <div class="map-card-title">Map layers</div>
             <label class="switch"><input type="checkbox" id="toggleRadar" disabled> Precipitation radar</label>
+            <div id="radarPlayer" class="radar-player" hidden>
+              <button id="btnRadarPlay" class="btn btn-icon" type="button" aria-label="Play radar animation"></button>
+              <input id="radarSlider" type="range" min="0" max="0" step="1" value="0" aria-label="Radar time">
+              <span id="radarTime" class="radar-time" aria-live="off"></span>
+            </div>
             <label class="switch"><input type="checkbox" id="toggleClouds" disabled> Satellite (clouds)</label>
             <p id="layerNote" class="map-card-note">Loading layers…</p>
           </div>
@@ -116,7 +123,7 @@
   <footer class="site-footer">
     <div class="container footer-inner">
       <span>The Nerd Map · Live environmental data from public sources</span>
-      <span>Data: Open-Meteo, NWS, NHC, RainViewer, NASA GIBS, NIFC and USGS · <a href="about.html">About the data</a></span>
+      <span>Data: Open-Meteo, NOAA, NASA, RainViewer, NIFC and USGS · <a href="about.html">About the data</a></span>
     </div>
   </footer>
 </body>

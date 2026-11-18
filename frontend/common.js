@@ -36,6 +36,8 @@ const ICONS = {
   alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"/>',
   map: '<path d="M14.1 6.03a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 5.1v12.28a1 1 0 0 1-.55.9l-4.56 2.28a2 2 0 0 1-1.79 0l-4.21-2.1a2 2 0 0 0-1.79 0l-3.66 1.83A1 1 0 0 1 3 19.38V7.1a1 1 0 0 1 .55-.9l4.56-2.28a2 2 0 0 1 1.79 0zM15 5.76v15M9 3.24v15"/>',
   clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  play: '<path d="M6 3.5v17a.5.5 0 0 0 .77.42l13.5-8.5a.5.5 0 0 0 0-.84L6.77 3.08A.5.5 0 0 0 6 3.5Z"/>',
+  pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
   maximize: '<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>',
   minimize: '<path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/>',
   ruler: '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0ZM14.5 12.5l2-2M11.5 9.5l2-2M8.5 6.5l2-2M17.5 15.5l2-2"/>',
@@ -323,7 +325,10 @@ function showLocation(location) {
 }
 
 function selectLocation(location, source, onLocation) {
-  if (source !== "saved") saveLocation(location);
+  if (source !== "saved") {
+    saveLocation(location);
+    updateAlertBadge(location);
+  }
   showLocation(location);
   setLocationStatus("");
   onLocation(location, source);
@@ -443,6 +448,109 @@ function setupCitySearch(onLocation) {
     if (e.key === "Escape") results.replaceChildren();
   });
 }
+
+// ==========================================================================
+// NWS alerts for a single point (api.weather.gov, US only)
+// Shared by the nav badge and the Severe Weather page; cached for 5 minutes
+// per point so moving between pages doesn't re-query the weather service.
+// ==========================================================================
+const ALERT_LEVELS = {
+  W: { label: "Warning", color: "#d03b3b", rank: 3 },
+  A: { label: "Watch", color: "#ec835a", rank: 2 },
+  Y: { label: "Advisory", color: "#fab219", rank: 1 },
+  S: { label: "Statement", color: "#7a8699", rank: 0 },
+};
+
+// api.weather.gov alerts don't carry a significance code, so infer it from the event name.
+function alertLevelFromEvent(event = "") {
+  if (/warning$/i.test(event)) return ALERT_LEVELS.W;
+  if (/watch$/i.test(event)) return ALERT_LEVELS.A;
+  if (/advisory$/i.test(event)) return ALERT_LEVELS.Y;
+  return ALERT_LEVELS.S;
+}
+
+const POINT_ALERTS_TTL_MS = 5 * 60 * 1000;
+
+// Resolves to { outsideUS, alerts: [{ event, headline, description, instruction, ends, expires, senderName }] }.
+async function fetchPointAlerts(location) {
+  const point = `${location.latitude.toFixed(4)},${location.longitude.toFixed(4)}`;
+  const cacheKey = `alerts:${point}`;
+
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(cacheKey));
+    if (cached && Date.now() - cached.time < POINT_ALERTS_TTL_MS) return cached.result;
+  } catch {
+    /* storage unavailable: just fetch */
+  }
+
+  const res = await fetch(`https://api.weather.gov/alerts/active?point=${point}`);
+  let result;
+  if (res.status === 400 || res.status === 404) {
+    result = { outsideUS: true, alerts: [] }; // the API rejects points outside the US
+  } else {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    result = {
+      outsideUS: false,
+      alerts: data.features.map(({ properties: p }) => ({
+        event: p.event,
+        headline: p.headline,
+        description: p.description,
+        instruction: p.instruction,
+        ends: p.ends,
+        expires: p.expires,
+        senderName: p.senderName,
+      })),
+    };
+  }
+
+  try {
+    sessionStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), result }));
+  } catch {
+    /* storage full or blocked: skip caching */
+  }
+  return result;
+}
+
+// Dot on the Severe Weather tab when the saved location has an active warning (red) or watch (orange).
+let alertBadgeRequest = 0;
+
+async function updateAlertBadge(location = loadSavedLocation()) {
+  const tab = document.querySelector('.tab[href="severe.html"]');
+  if (!tab) return;
+
+  const request = ++alertBadgeRequest;
+  const clear = () => tab.querySelectorAll(".tab-badge, .tab-badge-label").forEach((el) => el.remove());
+  if (!location) return clear();
+
+  try {
+    const { alerts } = await fetchPointAlerts(location);
+    if (request !== alertBadgeRequest) return; // a newer location was picked meanwhile
+    clear();
+
+    const serious = alerts.map((a) => alertLevelFromEvent(a.event)).filter((level) => level.rank >= 2);
+    if (serious.length === 0) return;
+
+    const top = serious.reduce((a, b) => (b.rank > a.rank ? b : a));
+    const place = location.name ? location.name.split(",")[0] : "your location";
+    const summary = `${serious.length} active ${serious.length === 1 ? "alert" : "alerts"} for ${place}`;
+
+    const badge = document.createElement("span");
+    badge.className = "tab-badge";
+    badge.style.background = top.color;
+    badge.title = summary;
+
+    const label = document.createElement("span");
+    label.className = "tab-badge-label visually-hidden";
+    label.textContent = ` (${summary})`;
+
+    tab.append(badge, label);
+  } catch (e) {
+    console.warn("Alert badge unavailable:", e);
+  }
+}
+
+updateAlertBadge();
 
 // Wire the whole location panel. Pass { restore: false } to restore the saved
 // location yourself later (e.g. after other data has loaded).

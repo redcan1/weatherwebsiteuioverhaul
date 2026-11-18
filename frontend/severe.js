@@ -11,22 +11,10 @@ let showMarine = false;
 const WWA_URL = "https://mapservices.weather.noaa.gov/eventdriven/rest/services/WWA/watch_warn_adv/MapServer/1/query";
 const TROPICAL_URL = "https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather/MapServer";
 
-// NWS significance levels, most severe first. Always shown with a label, never colour alone.
-const LEVELS = {
-  W: { label: "Warning", color: "#d03b3b", rank: 3 },
-  A: { label: "Watch", color: "#ec835a", rank: 2 },
-  Y: { label: "Advisory", color: "#fab219", rank: 1 },
-  S: { label: "Statement", color: "#7a8699", rank: 0 },
-};
+// NWS significance levels (shared with the nav badge in common.js). Always shown with a label.
+const LEVELS = ALERT_LEVELS;
 const levelOf = (sig) => LEVELS[String(sig || "").trim()] || LEVELS.S;
-
-// The api.weather.gov alerts don't carry a significance code, so infer it from the event name.
-function levelFromEvent(event = "") {
-  if (/warning$/i.test(event)) return LEVELS.W;
-  if (/watch$/i.test(event)) return LEVELS.A;
-  if (/advisory$/i.test(event)) return LEVELS.Y;
-  return LEVELS.S;
-}
+const levelFromEvent = alertLevelFromEvent;
 
 // Marine hazards (VTEC phenomena codes) — hidden unless the marine toggle is on.
 const MARINE_PHENOMENA = new Set(["SC", "GL", "SR", "SE", "UP", "BW", "HF", "MF", "MS", "MH", "LO", "RB", "SI", "SW", "MA"]);
@@ -326,17 +314,13 @@ async function loadLocalAlerts(location) {
   box.innerHTML = emptyState("clock", "Checking for alerts…");
 
   try {
-    const point = `${location.latitude.toFixed(4)},${location.longitude.toFixed(4)}`;
-    const res = await fetch(`https://api.weather.gov/alerts/active?point=${point}`);
-    if (res.status === 400 || res.status === 404) {
+    const result = await fetchPointAlerts(location); // cached, shared with the nav badge
+    if (result.outsideUS) {
       box.innerHTML = emptyState("map-pin", "Local alerts are only available for US locations.");
       return;
     }
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const alerts = (await res.json()).features
-      .map((f) => f.properties)
-      .sort((a, b) => levelFromEvent(b.event).rank - levelFromEvent(a.event).rank);
+    const alerts = [...result.alerts].sort((a, b) => levelFromEvent(b.event).rank - levelFromEvent(a.event).rank);
 
     if (alerts.length === 0) {
       box.innerHTML = emptyState("shield", "No active alerts for this location.");

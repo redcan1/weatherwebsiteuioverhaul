@@ -27,6 +27,8 @@
         <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
         <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
         <a class="tab" href="humidity.html"><svg data-icon="droplet"></svg><span>Humidity</span></a>
+        <a class="tab" href="events.html"><svg data-icon="map"></svg><span>Natural Events</span></a>
+        <a class="tab" href="aurora.html"><svg data-icon="sun"></svg><span>Aurora</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
       </nav>
     </div>
@@ -52,6 +54,8 @@
           <a class="feature" href="air.html"><svg data-icon="wind"></svg><h3>Air</h3><p>The US Air Quality Index, pollutant levels and a 24-hour AQI forecast.</p></a>
           <a class="feature" href="humidity.html"><svg data-icon="droplet"></svg><h3>Humidity</h3><p>Humidity, dew point and comfort, with a regional humidity map.</p></a>
           <a class="feature" href="severe.html"><svg data-icon="alert"></svg><h3>Severe Weather</h3><p>US warnings, watches and advisories, plus hurricane tracks and cones.</p></a>
+          <a class="feature" href="events.html"><svg data-icon="map"></svg><h3>Natural Events</h3><p>Storms, wildfires, volcanoes, icebergs and more, worldwide.</p></a>
+          <a class="feature" href="aurora.html"><svg data-icon="sun"></svg><h3>Aurora</h3><p>Where the northern lights may be visible, plus the Kp forecast.</p></a>
           </div>
         </section>
 
@@ -160,6 +164,30 @@
             </div>
           </article>
           <article class="source">
+            <div class="source-icon"><svg data-icon="map"></svg></div>
+            <div>
+              <h3><a href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noopener">NASA EONET</a></h3>
+              <p>The Earth Observatory Natural Event Tracker, a curated catalog of natural events (storms, wildfires, volcanoes, icebergs and more) linked to their original sources.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Natural Events</li>
+                <li><strong>Coverage:</strong> Worldwide</li>
+                <li><strong>Updates:</strong> Daily, as events are added or updated</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="sun"></svg></div>
+            <div>
+              <h3><a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener">NOAA Space Weather Prediction Center</a></h3>
+              <p>The OVATION aurora model's probability of aurora overhead, plus the observed and forecast planetary Kp index of geomagnetic activity.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Aurora</li>
+                <li><strong>Coverage:</strong> Worldwide (both hemispheres)</li>
+                <li><strong>Updates:</strong> Aurora every ~30 minutes; Kp every 3 hours</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
             <div class="source-icon"><svg data-icon="activity"></svg></div>
             <div>
               <h3><a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS Earthquake Hazards Program</a></h3>
@@ -227,7 +255,7 @@
   <footer class="site-footer">
     <div class="container footer-inner">
       <span>The Nerd Map · Live environmental data from public sources</span>
-      <span>Data: Open-Meteo, NWS, NHC, RainViewer, NASA GIBS, NIFC and USGS · <a href="about.html">About the data</a></span>
+      <span>Data: Open-Meteo, NOAA, NASA, RainViewer, NIFC and USGS · <a href="about.html">About the data</a></span>
     </div>
   </footer>
 </body>

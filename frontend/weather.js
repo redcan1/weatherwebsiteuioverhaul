@@ -195,24 +195,104 @@ function useLocation(location, source) {
 // ==========================================================================
 // Map overlays: RainViewer radar + NASA GIBS GOES-East satellite imagery
 // ==========================================================================
-async function loadRadarLayer() {
+// --------------------------------------------------------------------------
+// Animated radar: one tile layer per RainViewer frame (past ~2 hours, every 10 min).
+// All frames are on the map while radar is on; only the current one is visible,
+// so playback never waits for tiles.
+// --------------------------------------------------------------------------
+const RADAR_OPACITY = 0.7;
+const FRAME_MS = 500;
+const LAST_FRAME_HOLD_MS = 1500; // pause on "now" before looping
+
+const radar = { frames: [], layers: [], index: 0, timer: null };
+
+const clockTime = (date) => date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+async function loadRadarFrames() {
   const res = await fetch("https://api.rainviewer.com/public/weather-maps.json");
   if (!res.ok) throw new Error(`RainViewer HTTP ${res.status}`);
   const data = await res.json();
 
-  const frames = data.radar?.past || [];
-  const latest = frames[frames.length - 1];
-  if (!latest) throw new Error("no radar frames");
+  radar.frames = data.radar?.past || [];
+  if (radar.frames.length === 0) throw new Error("no radar frames");
 
   // Free RainViewer tiles stop at zoom 7; Leaflet scales them up beyond that.
-  const layer = L.tileLayer(`${data.host}${latest.path}/256/{z}/{x}/{y}/2/1_1.png`, {
-    opacity: 0.7,
-    zIndex: 3, // above the satellite layer
-    maxNativeZoom: 7,
-    maxZoom: 19,
-    attribution: '<a href="https://www.rainviewer.com/">RainViewer</a>',
-  });
-  return { layer, time: new Date(latest.time * 1000) };
+  radar.layers = radar.frames.map((frame) =>
+    L.tileLayer(`${data.host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+      opacity: 0,
+      zIndex: 3, // above the satellite layer
+      maxNativeZoom: 7,
+      maxZoom: 19,
+      attribution: '<a href="https://www.rainviewer.com/">RainViewer</a>',
+    })
+  );
+  radar.index = radar.frames.length - 1;
+}
+
+function showRadarFrame(i) {
+  radar.layers[radar.index]?.setOpacity(0);
+  radar.index = i;
+  radar.layers[i].setOpacity(RADAR_OPACITY);
+
+  const last = radar.frames.length - 1;
+  const slider = $("radarSlider");
+  if (slider) slider.value = String(i);
+  const time = clockTime(new Date(radar.frames[i].time * 1000));
+  setText("radarTime", i === last ? `${time} · latest` : time);
+}
+
+function setRadarPlaying(playing) {
+  clearTimeout(radar.timer);
+  radar.timer = null;
+
+  const button = $("btnRadarPlay");
+  if (button) {
+    button.innerHTML = icon(playing ? "pause" : "play");
+    button.setAttribute("aria-label", playing ? "Pause radar animation" : "Play radar animation");
+    button.title = button.getAttribute("aria-label");
+  }
+  if (!playing) return;
+
+  const step = () => {
+    const next = (radar.index + 1) % radar.frames.length;
+    showRadarFrame(next);
+    radar.timer = setTimeout(step, next === radar.frames.length - 1 ? LAST_FRAME_HOLD_MS : FRAME_MS);
+  };
+  radar.timer = setTimeout(step, FRAME_MS);
+}
+
+function setRadarVisible(visible) {
+  const player = $("radarPlayer");
+  if (visible) {
+    radar.layers.forEach((layer) => layer.addTo(map));
+    showRadarFrame(radar.index);
+    if (player) player.hidden = false;
+  } else {
+    setRadarPlaying(false);
+    radar.layers.forEach((layer) => map.removeLayer(layer));
+    if (player) player.hidden = true;
+  }
+}
+
+function setupRadarControls() {
+  const toggle = $("toggleRadar");
+  const slider = $("radarSlider");
+  const button = $("btnRadarPlay");
+
+  if (slider) {
+    slider.max = String(radar.frames.length - 1);
+    slider.addEventListener("input", () => {
+      setRadarPlaying(false);
+      showRadarFrame(Number(slider.value));
+    });
+  }
+  button?.addEventListener("click", () => setRadarPlaying(radar.timer === null));
+  setRadarPlaying(false); // draw the play icon
+
+  if (toggle) {
+    toggle.disabled = false;
+    toggle.addEventListener("change", () => setRadarVisible(toggle.checked));
+  }
 }
 
 const GIBS = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best";
@@ -260,12 +340,11 @@ function bindToggle(checkboxId, layer) {
 
 async function setupOverlays() {
   const notes = [];
-  const clock = (date) => date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
   try {
-    const radar = await loadRadarLayer();
-    bindToggle("toggleRadar", radar.layer);
-    notes.push(`Radar ${clock(radar.time)}`);
+    await loadRadarFrames();
+    setupRadarControls();
+    notes.push("Radar covers the past 2 hours");
   } catch (e) {
     console.error("Radar unavailable:", e);
     notes.push("Radar unavailable");
@@ -274,7 +353,7 @@ async function setupOverlays() {
   try {
     const satellite = await loadSatelliteLayer();
     bindToggle("toggleClouds", satellite.layer);
-    notes.push(`satellite ${clock(satellite.time)} (Americas)`);
+    notes.push(`satellite ${clockTime(satellite.time)} (Americas)`);
   } catch (e) {
     console.error("Satellite imagery unavailable:", e);
     notes.push("satellite unavailable");

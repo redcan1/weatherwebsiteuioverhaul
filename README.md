@@ -1,6 +1,6 @@
 # The Nerd Map
 
-A static website that shows live environmental data on interactive maps: weather, severe weather alerts, hurricanes, wildfires, earthquakes, air quality and humidity.
+A static website that shows live environmental data on interactive maps: weather, severe weather alerts, hurricanes, wildfires, earthquakes, air quality, humidity, natural events and the aurora.
 
 ## Running it
 
@@ -25,6 +25,8 @@ Then open http://localhost:8000. Browser geolocation ("Use my current location")
 | `seismic.html` + `seismic.js` | M2.5+ earthquakes from the past day or week, strongest and nearest quakes |
 | `air.html` + `air.js` | US AQI, pollutant levels and a 24-hour AQI forecast |
 | `humidity.html` + `humidity.js` | Humidity, dew point, comfort, 24-hour trend and a regional humidity grid |
+| `events.html` + `events.js` | NASA EONET natural events worldwide, with category filters and storm tracks |
+| `aurora.html` + `aurora.js` | NOAA OVATION aurora probability map, viewing chance and Kp index chart |
 | `about.html` | What the site is and where every piece of data comes from |
 
 The location a visitor picks is saved in `localStorage`, so every page opens on the same place.
@@ -38,6 +40,8 @@ All sources are free and need no API key. See `about.html` for details.
 - **NASA GIBS**: GOES-East GeoColor satellite imagery (the newest frame is looked up via DescribeDomains)
 - **National Weather Service**: alert shapes from NOAA's watch/warning map service; local alert text from api.weather.gov
 - **National Hurricane Center**: storm forecast points, track and cone from NOAA's tropical map service (one `identify` request covers all 15 storm slots)
+- **NASA EONET**: open natural events (storms, wildfires, volcanoes, sea ice…)
+- **NOAA SWPC**: OVATION aurora forecast grid and planetary Kp index (observed + forecast)
 - **NIFC WFIGS**: current interagency fire perimeters
 - **USGS**: FDSN earthquake event service
 - **Esri ArcGIS Online**: Light Gray Canvas and World Street Map basemaps
