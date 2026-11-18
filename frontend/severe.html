@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Severe Weather · The Nerd Map</title>
+  <meta name="description" content="Active National Weather Service warnings, watches and advisories across the US, plus tropical storms and hurricanes.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="common.js" defer></script>
+  <script src="severe.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="The Nerd Map home">
+        <img src="thenerdmap.png" alt="The Nerd Map" width="122" height="52">
+      </a>
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="index.html"><svg data-icon="cloud-sun"></svg><span>Weather</span></a>
+        <a class="tab" href="severe.html"><svg data-icon="alert"></svg><span>Severe Weather</span></a>
+        <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
+        <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
+        <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
+        <a class="tab" href="humidity.html"><svg data-icon="droplet"></svg><span>Humidity</span></a>
+        <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    <div class="page-head">
+      <div>
+        <p class="eyebrow"><span class="live-dot"></span>Updated continuously</p>
+        <h1>Severe weather</h1>
+        <p class="lede">Active National Weather Service warnings, watches and advisories across the US, plus tropical storms and hurricanes tracked by the National Hurricane Center.</p>
+      </div>
+      <div class="sources">Data from <a href="https://www.weather.gov/" target="_blank" rel="noopener">NWS</a><a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener">NHC</a></div>
+    </div>
+
+    <div id="alertStats" class="kpis" aria-live="polite">
+      <div class="stat"><div class="stat-label">Warnings</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Watches</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Advisories &amp; statements</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Tropical storms</div><div class="stat-value">—</div></div>
+    </div>
+
+    <div class="dashboard">
+      <div class="stack">
+        <section class="panel" aria-labelledby="locHeading">
+          <div class="panel-head"><h2 id="locHeading">Location</h2></div>
+          <div class="search-field">
+            <svg data-icon="search"></svg>
+            <input id="cityInput" type="search" placeholder="Search for a city" autocomplete="off" aria-label="Search for a city">
+            <button id="btnCitySearch" class="btn btn-primary" type="button">Search</button>
+          </div>
+          <div id="cityResults" class="results" aria-live="polite"></div>
+          <div class="divider">or</div>
+          <button id="btnLocation" class="btn btn-secondary btn-block" type="button"><svg data-icon="navigation"></svg>Use my current location</button>
+          <div id="locCard" class="loc-card is-empty">
+            <svg data-icon="map-pin"></svg>
+            <div>
+              <div id="locName" class="loc-name">No location selected</div>
+              <div id="locResult" class="loc-meta">Search for a city or use your current location.</div>
+            </div>
+          </div>
+          <p id="locStatus" class="status" role="status" hidden></p>
+        </section>
+        <section class="panel" aria-labelledby="localHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="localHeading">Alerts for your location</h2>
+              <p id="localSub" class="panel-sub">Pick a US location to check</p>
+            </div>
+          </div>
+          <div id="localAlerts"><div class="empty"><svg data-icon="shield"></svg><p>Search for a city or use your location to see its active alerts.</p></div></div>
+        </section>
+        <section class="panel" aria-labelledby="typesHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="typesHeading">Active alert types</h2>
+              <p class="panel-sub">Most severe first. Click one to zoom to it.</p>
+            </div>
+          </div>
+          <div id="alertTypes"><div class="empty"><svg data-icon="alert"></svg><p>Loading alerts…</p></div></div>
+        </section>
+      </div>
+
+      <section class="panel map-panel" aria-label="Severe weather map">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="map-card">
+            <div class="map-card-title">Layers</div>
+            <label class="switch"><input type="checkbox" id="toggleTropical" checked> Tropical storms</label>
+            <label class="switch"><input type="checkbox" id="toggleMarine"> Marine alerts</label>
+            <p id="tropicalNote" class="map-card-note">Checking for tropical storms…</p>
+            <p id="wxStatus" class="map-card-note">Loading alerts…</p>
+          </div>
+          <div class="map-card">
+            <div class="map-card-title">Legend</div>
+            <div id="alertLegend"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>The Nerd Map · Live environmental data from public sources</span>
+      <span>Data: Open-Meteo, NWS, NHC, RainViewer, NASA GIBS, NIFC and USGS · <a href="about.html">About the data</a></span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -839,6 +839,87 @@ a {
 }
 
 /* ==========================================================================
+   Severe weather: expandable local alerts
+   ========================================================================== */
+.alert-list {
+  display: grid;
+  gap: 8px;
+}
+
+.alert-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.alert-item summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.alert-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.alert-item[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.alert-title,
+.alert-when {
+  display: block;
+}
+
+.alert-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.alert-when {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.level-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.alert-body {
+  max-height: 320px;
+  overflow: auto;
+  padding: 4px 12px 12px;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.alert-body p {
+  white-space: pre-line; /* keep the paragraph breaks from the NWS text */
+}
+
+.alert-headline {
+  margin-top: 8px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.alert-body h4 {
+  margin: 12px 0 2px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
    Weather: hourly strip + daily forecast
    ========================================================================== */
 .hourly {

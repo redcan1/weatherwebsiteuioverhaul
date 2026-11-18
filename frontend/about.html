@@ -22,6 +22,7 @@
       </a>
       <nav class="tabs" aria-label="Sections">
         <a class="tab" href="index.html"><svg data-icon="cloud-sun"></svg><span>Weather</span></a>
+        <a class="tab" href="severe.html"><svg data-icon="alert"></svg><span>Severe Weather</span></a>
         <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
         <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
         <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
@@ -50,6 +51,7 @@
           <a class="feature" href="seismic.html"><svg data-icon="activity"></svg><h3>Seismic</h3><p>M2.5+ earthquakes worldwide from the past day or week.</p></a>
           <a class="feature" href="air.html"><svg data-icon="wind"></svg><h3>Air</h3><p>The US Air Quality Index, pollutant levels and a 24-hour AQI forecast.</p></a>
           <a class="feature" href="humidity.html"><svg data-icon="droplet"></svg><h3>Humidity</h3><p>Humidity, dew point and comfort, with a regional humidity map.</p></a>
+          <a class="feature" href="severe.html"><svg data-icon="alert"></svg><h3>Severe Weather</h3><p>US warnings, watches and advisories, plus hurricane tracks and cones.</p></a>
           </div>
         </section>
 
@@ -134,6 +136,30 @@
             </div>
           </article>
           <article class="source">
+            <div class="source-icon"><svg data-icon="alert"></svg></div>
+            <div>
+              <h3><a href="https://www.weather.gov/" target="_blank" rel="noopener">National Weather Service</a></h3>
+              <p>Official US watches, warnings and advisories. Alert shapes come from NOAA's watch/warning map service; the alerts for your location, with full text and safety instructions, come from the api.weather.gov alerts API.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Severe Weather</li>
+                <li><strong>Coverage:</strong> United States and coastal waters</li>
+                <li><strong>Updates:</strong> As forecast offices issue alerts, typically within minutes</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="storm"></svg></div>
+            <div>
+              <h3><a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener">National Hurricane Center</a></h3>
+              <p>Forecast positions, track and cone of uncertainty for active tropical storms and hurricanes, served by NOAA's tropical weather map service.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Severe Weather</li>
+                <li><strong>Coverage:</strong> Atlantic, East and Central Pacific</li>
+                <li><strong>Updates:</strong> With each advisory, usually every 6 hours (more often near land)</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
             <div class="source-icon"><svg data-icon="activity"></svg></div>
             <div>
               <h3><a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS Earthquake Hazards Program</a></h3>
@@ -201,7 +227,7 @@
   <footer class="site-footer">
     <div class="container footer-inner">
       <span>The Nerd Map · Live environmental data from public sources</span>
-      <span>Data: Open-Meteo, RainViewer, NASA GIBS, NIFC and USGS · <a href="about.html">About the data</a></span>
+      <span>Data: Open-Meteo, NWS, NHC, RainViewer, NASA GIBS, NIFC and USGS · <a href="about.html">About the data</a></span>
     </div>
   </footer>
 </body>
