@@ -2,6 +2,8 @@
 
 A static website that shows live environmental data on interactive maps: weather, severe weather alerts, hurricanes, wildfires, earthquakes, air quality, natural events, the aurora, tides and the ISS.
 
+For a summary of the skills and data this project demonstrates, see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
+
 ## Running it
 
 There is no build step. Serve the `frontend/` folder with any static file server, for example:
