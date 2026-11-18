@@ -41,12 +41,6 @@
         <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
       </nav>
-      <div class="header-tools">
-        <div class="units-toggle" role="group" aria-label="Temperature units">
-          <button type="button" data-units="imperial" aria-label="Fahrenheit and imperial units">°F</button>
-          <button type="button" data-units="metric" aria-label="Celsius and metric units">°C</button>
-        </div>
-      </div>
     </div>
   </header>
 
@@ -57,7 +51,13 @@
         <h1>Air quality</h1>
         <p class="lede">The US Air Quality Index, the pollutants behind it and what to expect over the next 24 hours.</p>
       </div>
-      <div class="sources">Data from <a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener">Open-Meteo Air Quality</a></div>
+      <div class="page-head-side">
+        <div class="units-toggle" role="group" aria-label="Units">
+          <button type="button" data-units="imperial" aria-label="Fahrenheit and imperial units">°F</button>
+          <button type="button" data-units="metric" aria-label="Celsius and metric units">°C</button>
+        </div>
+        <div class="sources">Data from <a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener">Open-Meteo Air Quality</a></div>
+      </div>
     </div>
 
     <div class="dashboard">

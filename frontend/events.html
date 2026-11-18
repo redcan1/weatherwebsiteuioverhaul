@@ -40,12 +40,6 @@
         <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
       </nav>
-      <div class="header-tools">
-        <div class="units-toggle" role="group" aria-label="Temperature units">
-          <button type="button" data-units="imperial" aria-label="Fahrenheit and imperial units">°F</button>
-          <button type="button" data-units="metric" aria-label="Celsius and metric units">°C</button>
-        </div>
-      </div>
     </div>
   </header>
 
@@ -56,7 +50,13 @@
         <h1>Natural events</h1>
         <p class="lede">Storms, wildfires, volcanoes, icebergs and other natural events happening around the world right now, tracked by NASA's Earth Observatory.</p>
       </div>
-      <div class="sources">Data from <a href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noopener">NASA EONET</a></div>
+      <div class="page-head-side">
+        <div class="units-toggle" role="group" aria-label="Units">
+          <button type="button" data-units="imperial" aria-label="Fahrenheit and imperial units">°F</button>
+          <button type="button" data-units="metric" aria-label="Celsius and metric units">°C</button>
+        </div>
+        <div class="sources">Data from <a href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noopener">NASA EONET</a></div>
+      </div>
     </div>
 
     <div id="eventStats" class="kpis" aria-live="polite">

@@ -304,6 +304,32 @@ function highlightActiveTab() {
     tab.classList.toggle("active", isActive);
     if (isActive) tab.setAttribute("aria-current", "page");
   });
+
+  watchTabOverflow();
+}
+
+// Show the tab row's scrollbar only while some tabs don't fit, and keep the current
+// tab in view. Re-checked on resize and once the web font has loaded (it changes widths).
+function watchTabOverflow() {
+  const nav = document.querySelector(".tabs");
+  if (!nav) return;
+
+  const update = () => {
+    const overflowing = nav.scrollWidth > nav.clientWidth + 1;
+    nav.classList.toggle("is-overflowing", overflowing);
+    const active = nav.querySelector(".tab.active");
+    if (overflowing && active) {
+      const offset = active.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+      if (offset < 0 || offset + active.offsetWidth > nav.clientWidth) {
+        nav.scrollLeft += offset - (nav.clientWidth - active.offsetWidth) / 2; // scroll the row, not the page
+      }
+    }
+  };
+
+  update();
+  if ("ResizeObserver" in window) new ResizeObserver(update).observe(nav);
+  else window.addEventListener("resize", update);
+  document.fonts?.ready.then(update);
 }
 
 hydrateIcons();

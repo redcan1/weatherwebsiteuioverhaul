@@ -24,7 +24,7 @@ It overwrites the `.html` files in `frontend/`, so don't edit those by hand. Pag
 
 ## Features across every page
 
-- **°F / °C switch** in the header (stored in `localStorage`, applied by reloading). Pages read `UNIT` / `METRIC` from `common.js`.
+- **°F / °C switch** in each page heading, above the data sources (stored in `localStorage`, applied by reloading). Pages read `UNIT` / `METRIC` from `common.js`.
 - **Saved places**: save the current location and switch between up to 8 places from the Location panel.
 - **Shareable links**: the URL carries `lat`, `lon`, `name` and `map=lat,lon,zoom`; **Share** copies it (or opens the phone share sheet).
 - **Auto-refresh**: each page re-fetches its data with `autoRefresh(task, minutes)` while the tab is visible (5 min for alerts and quakes, 10 for weather and radar, longer for slower sources).

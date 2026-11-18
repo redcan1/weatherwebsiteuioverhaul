@@ -67,12 +67,6 @@ ${script_tags}</head>
         <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
       </nav>
-      <div class="header-tools">
-        <div class="units-toggle" role="group" aria-label="Temperature units">
-          <button type="button" data-units="imperial" aria-label="Fahrenheit and imperial units">°F</button>
-          <button type="button" data-units="metric" aria-label="Celsius and metric units">°C</button>
-        </div>
-      </div>
     </div>
   </header>
 
@@ -99,7 +93,13 @@ head_block() { # EYEBROW TITLE LEDE SOURCES_HTML
         <h1>$2</h1>
         <p class="lede">$3</p>
       </div>
-      <div class="sources">Data from $4</div>
+      <div class="page-head-side">
+        <div class="units-toggle" role="group" aria-label="Units">
+          <button type="button" data-units="imperial" aria-label="Fahrenheit and imperial units">°F</button>
+          <button type="button" data-units="metric" aria-label="Celsius and metric units">°C</button>
+        </div>
+        <div class="sources">Data from $4</div>
+      </div>
     </div>
 EOF
 }
