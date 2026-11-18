@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wildfires · The Nerd Map</title>
+  <meta name="description" content="Active wildfire perimeters across the United States, with size, containment and distance from you.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="common.js" defer></script>
+  <script src="wildfires.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="The Nerd Map home">
+        <img src="thenerdmap.png" alt="The Nerd Map" width="122" height="52">
+      </a>
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="index.html"><svg data-icon="cloud-sun"></svg><span>Weather</span></a>
+        <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
+        <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
+        <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
+        <a class="tab" href="humidity.html"><svg data-icon="droplet"></svg><span>Humidity</span></a>
+        <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    <div class="page-head">
+      <div>
+        <p class="eyebrow"><span class="live-dot"></span>Updated continuously</p>
+        <h1>Wildfires</h1>
+        <p class="lede">Every active wildfire perimeter currently mapped by US fire agencies, with size, containment and how far each fire is from you.</p>
+      </div>
+      <div class="sources">Data from <a href="https://data-nifc.opendata.arcgis.com/" target="_blank" rel="noopener">NIFC WFIGS</a></div>
+    </div>
+
+    <div id="fireStats" class="kpis" aria-live="polite">
+      <div class="stat"><div class="stat-label">Active perimeters</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Area burned</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Largest</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Nearest to you</div><div class="stat-value">—</div></div>
+    </div>
+
+    <div class="dashboard">
+      <div class="stack">
+        <section class="panel" aria-labelledby="locHeading">
+          <div class="panel-head"><h2 id="locHeading">Location</h2></div>
+          <div class="search-field">
+            <svg data-icon="search"></svg>
+            <input id="cityInput" type="search" placeholder="Search for a city" autocomplete="off" aria-label="Search for a city">
+            <button id="btnCitySearch" class="btn btn-primary" type="button">Search</button>
+          </div>
+          <div id="cityResults" class="results" aria-live="polite"></div>
+          <div class="divider">or</div>
+          <button id="btnLocation" class="btn btn-secondary btn-block" type="button"><svg data-icon="navigation"></svg>Use my current location</button>
+          <div id="locCard" class="loc-card is-empty">
+            <svg data-icon="map-pin"></svg>
+            <div>
+              <div id="locName" class="loc-name">No location selected</div>
+              <div id="locResult" class="loc-meta">Search for a city or use your current location.</div>
+            </div>
+          </div>
+          <p id="locStatus" class="status" role="status" hidden></p>
+        </section>
+        <section class="panel" aria-labelledby="fireListHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="fireListHeading">Largest active fires</h2>
+              <p id="wfStatus" class="panel-sub">Loading fire perimeters…</p>
+            </div>
+            <button id="btnReloadPerimeters" class="btn btn-ghost" type="button" aria-label="Reload fire perimeters"><svg data-icon="refresh"></svg>Reload</button>
+          </div>
+          <div id="fireList"><div class="empty"><svg data-icon="flame"></svg><p>Loading fires…</p></div></div>
+        </section>
+      </div>
+
+      <section class="panel map-panel" aria-label="Wildfire map">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="map-card">
+            <div class="map-card-title">Legend</div>
+            <div class="legend-row"><span class="swatch" style="background:rgba(208,59,59,.3);box-shadow:inset 0 0 0 2px #d03b3b;border-radius:3px"></span>Fire perimeter</div>
+            <div class="legend-row"><span class="swatch" style="background:#d03b3b"></span>Fire location</div>
+            <p class="map-card-note">Dot size shows fire size. Dots hide when you zoom in close.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>The Nerd Map · Live environmental data from public sources</span>
+      <span>Data: Open-Meteo, RainViewer, NASA GIBS, NIFC and USGS · <a href="about.html">About the data</a></span>
+    </div>
+  </footer>
+</body>
+</html>

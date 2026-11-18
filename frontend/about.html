@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About · The Nerd Map</title>
+  <meta name="description" content="What The Nerd Map is, where its data comes from and how your location is used.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+
+  <script src="common.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="The Nerd Map home">
+        <img src="thenerdmap.png" alt="The Nerd Map" width="122" height="52">
+      </a>
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="index.html"><svg data-icon="cloud-sun"></svg><span>Weather</span></a>
+        <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
+        <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
+        <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
+        <a class="tab" href="humidity.html"><svg data-icon="droplet"></svg><span>Humidity</span></a>
+        <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    <div class="narrow">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">About</p>
+          <h1>About The Nerd Map</h1>
+          <p class="lede">The Nerd Map brings live environmental data from trusted public sources together on one set of interactive maps, so you can see what the sky, the air and the ground are doing anywhere you care about.</p>
+        </div>
+      </div>
+
+      <div class="stack">
+        <section class="panel" aria-labelledby="exploreHeading">
+          <div class="panel-head"><h2 id="exploreHeading">What you can explore</h2></div>
+          <div class="feature-grid">
+          <a class="feature" href="index.html"><svg data-icon="cloud-sun"></svg><h3>Weather</h3><p>Current conditions, a 24-hour outlook, a 7-day forecast, and live radar and satellite layers.</p></a>
+          <a class="feature" href="wildfires.html"><svg data-icon="flame"></svg><h3>Wildfires</h3><p>Active US fire perimeters with size, containment and distance from you.</p></a>
+          <a class="feature" href="seismic.html"><svg data-icon="activity"></svg><h3>Seismic</h3><p>M2.5+ earthquakes worldwide from the past day or week.</p></a>
+          <a class="feature" href="air.html"><svg data-icon="wind"></svg><h3>Air</h3><p>The US Air Quality Index, pollutant levels and a 24-hour AQI forecast.</p></a>
+          <a class="feature" href="humidity.html"><svg data-icon="droplet"></svg><h3>Humidity</h3><p>Humidity, dew point and comfort, with a regional humidity map.</p></a>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="sourcesHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="sourcesHeading">Where the data comes from</h2>
+              <p class="panel-sub">Every reading is fetched live from these public services, straight from your browser. Nothing is cached or edited by The Nerd Map.</p>
+            </div>
+          </div>
+          <div class="source-list">
+          <article class="source">
+            <div class="source-icon"><svg data-icon="cloud-sun"></svg></div>
+            <div>
+              <h3><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo Forecast API</a></h3>
+              <p>An open-source weather API that blends forecast models from national weather services, including NOAA's GFS and HRRR in the US, ECMWF and Germany's DWD, into one consistent forecast. Data is licensed CC&nbsp;BY&nbsp;4.0.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Weather, Humidity</li>
+                <li><strong>Coverage:</strong> Worldwide</li>
+                <li><strong>Updates:</strong> Current conditions every 15 minutes; forecast models refresh hourly to every few hours</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="wind"></svg></div>
+            <div>
+              <h3><a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener">Open-Meteo Air Quality API</a></h3>
+              <p>Air-pollution forecasts from the Copernicus Atmosphere Monitoring Service (CAMS), the European Union's atmospheric monitoring program. The US AQI is calculated from the pollutant concentrations using EPA breakpoints.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Air</li>
+                <li><strong>Coverage:</strong> Worldwide (about 45&nbsp;km grid; 11&nbsp;km in Europe)</li>
+                <li><strong>Updates:</strong> Hourly values; forecasts refresh several times a day</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="search"></svg></div>
+            <div>
+              <h3><a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">Open-Meteo Geocoding API</a></h3>
+              <p>Powers the city search box. Place names and coordinates come from the GeoNames geographical database.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Every map page</li>
+                <li><strong>Coverage:</strong> Worldwide</li>
+                <li><strong>Updates:</strong> Static reference data</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="rain"></svg></div>
+            <div>
+              <h3><a href="https://www.rainviewer.com/api.html" target="_blank" rel="noopener">RainViewer</a></h3>
+              <p>A global precipitation radar mosaic assembled from weather radars run by national meteorological services around the world.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Weather (radar layer)</li>
+                <li><strong>Coverage:</strong> Regions with weather radar</li>
+                <li><strong>Updates:</strong> Every 10 minutes</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="satellite"></svg></div>
+            <div>
+              <h3><a href="https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api" target="_blank" rel="noopener">NASA GIBS · NOAA GOES-East</a></h3>
+              <p>NASA's Global Imagery Browse Services provides GeoColor imagery from NOAA's GOES-East satellite: true color by day, infrared cloud imagery by night.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Weather (satellite layer)</li>
+                <li><strong>Coverage:</strong> North and South America</li>
+                <li><strong>Updates:</strong> Every 10 minutes; the newest frame is usually 30–60 minutes old</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="flame"></svg></div>
+            <div>
+              <h3><a href="https://data-nifc.opendata.arcgis.com/" target="_blank" rel="noopener">NIFC · WFIGS Interagency Fire Perimeters</a></h3>
+              <p>Current wildfire perimeters from the National Interagency Fire Center's Wildland Fire Interagency Geospatial Services, compiled from federal, state and local fire agencies.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Wildfires</li>
+                <li><strong>Coverage:</strong> United States</li>
+                <li><strong>Updates:</strong> As incident teams map new perimeters, often daily on active fires</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="activity"></svg></div>
+            <div>
+              <h3><a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS Earthquake Hazards Program</a></h3>
+              <p>The U.S. Geological Survey's earthquake catalog, combining the USGS network with contributing seismic networks worldwide.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Seismic</li>
+                <li><strong>Coverage:</strong> Worldwide, magnitude 2.5 and above</li>
+                <li><strong>Updates:</strong> Near real time, typically within minutes</li>
+              </ul>
+            </div>
+          </article>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="mapsHeading">
+          <div class="panel-head"><h2 id="mapsHeading">Maps and tools</h2></div>
+          <div class="source-list">
+          <article class="source">
+            <div class="source-icon"><svg data-icon="map"></svg></div>
+            <div>
+              <h3><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></h3>
+              <p>Map data &copy; OpenStreetMap contributors, available under the Open Database License.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Every map</li>
+                <li><strong>Coverage:</strong> Worldwide</li>
+                <li><strong>Updates:</strong> Continuously, by volunteers</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="layers"></svg></div>
+            <div>
+              <h3><a href="https://www.esri.com/" target="_blank" rel="noopener">Esri basemaps</a></h3>
+              <p>The Light Gray Canvas and World Street Map styles, served from ArcGIS Online, with map data from Esri, HERE, Garmin, FAO, NOAA, USGS and OpenStreetMap contributors.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Every map</li>
+                <li><strong>Coverage:</strong> Worldwide</li>
+                <li><strong>Updates:</strong> Regularly</li>
+              </ul>
+            </div>
+          </article>
+          <article class="source">
+            <div class="source-icon"><svg data-icon="map-pin"></svg></div>
+            <div>
+              <h3><a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a></h3>
+              <p>The open-source JavaScript library that powers every interactive map on the site.</p>
+              <ul class="source-facts">
+                <li><strong>Used on:</strong> Every map</li>
+                <li><strong>Coverage:</strong> Desktop and mobile browsers</li>
+                <li><strong>Updates:</strong> Version 1.9.4</li>
+              </ul>
+            </div>
+          </article>
+          </div>
+        </section>
+
+        <div class="row row-2" style="margin-top:0">
+          <div class="callout"><svg data-icon="shield"></svg><p><strong>Your location stays on your device.</strong> When you search for a city or share your location, it's saved in your browser so every page opens on the same place. Its coordinates are only sent to the services listed above, to fetch readings and map tiles. The Nerd Map has no accounts and no analytics.</p></div>
+          <div class="callout warning"><svg data-icon="alert"></svg><p><strong>Not for emergency use.</strong> Data can be delayed, incomplete or based on models. For warnings and safety decisions, rely on official sources such as <a href="https://www.weather.gov/" target="_blank" rel="noopener">weather.gov</a>, <a href="https://www.airnow.gov/" target="_blank" rel="noopener">AirNow</a>, <a href="https://inciweb.wildfire.gov/" target="_blank" rel="noopener">InciWeb</a> and the <a href="https://earthquake.usgs.gov/" target="_blank" rel="noopener">USGS</a>.</p></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>The Nerd Map · Live environmental data from public sources</span>
+      <span>Data: Open-Meteo, RainViewer, NASA GIBS, NIFC and USGS · <a href="about.html">About the data</a></span>
+    </div>
+  </footer>
+</body>
+</html>

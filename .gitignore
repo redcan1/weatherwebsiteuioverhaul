@@ -1,0 +1,13 @@
+# Editor autosave / backup files
+\#*#
+.#*
+*~
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local tooling
+.vscode/
+__pycache__/

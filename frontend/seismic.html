@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seismic · The Nerd Map</title>
+  <meta name="description" content="Magnitude 2.5+ earthquakes worldwide from the past day and week, sized by magnitude and colored by depth.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="common.js" defer></script>
+  <script src="seismic.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="The Nerd Map home">
+        <img src="thenerdmap.png" alt="The Nerd Map" width="122" height="52">
+      </a>
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="index.html"><svg data-icon="cloud-sun"></svg><span>Weather</span></a>
+        <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
+        <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
+        <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
+        <a class="tab" href="humidity.html"><svg data-icon="droplet"></svg><span>Humidity</span></a>
+        <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    <div class="page-head">
+      <div>
+        <p class="eyebrow"><span class="live-dot"></span>Near real time</p>
+        <h1>Seismic activity</h1>
+        <p class="lede">Magnitude 2.5 and stronger earthquakes around the world, sized by magnitude and colored by depth. Click any point for details.</p>
+      </div>
+      <div class="sources">Data from <a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS</a></div>
+    </div>
+
+    <div id="quakeStats" class="kpis" aria-live="polite">
+      <div class="stat"><div class="stat-label">Past 24 hours</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Past 7 days</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Strongest</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Nearest to you</div><div class="stat-value">—</div></div>
+    </div>
+
+    <div class="dashboard">
+      <div class="stack">
+        <section class="panel" aria-labelledby="locHeading">
+          <div class="panel-head"><h2 id="locHeading">Location</h2></div>
+          <div class="search-field">
+            <svg data-icon="search"></svg>
+            <input id="cityInput" type="search" placeholder="Search for a city" autocomplete="off" aria-label="Search for a city">
+            <button id="btnCitySearch" class="btn btn-primary" type="button">Search</button>
+          </div>
+          <div id="cityResults" class="results" aria-live="polite"></div>
+          <div class="divider">or</div>
+          <button id="btnLocation" class="btn btn-secondary btn-block" type="button"><svg data-icon="navigation"></svg>Use my current location</button>
+          <div id="locCard" class="loc-card is-empty">
+            <svg data-icon="map-pin"></svg>
+            <div>
+              <div id="locName" class="loc-name">No location selected</div>
+              <div id="locResult" class="loc-meta">Search for a city or use your current location.</div>
+            </div>
+          </div>
+          <p id="locStatus" class="status" role="status" hidden></p>
+        </section>
+        <section class="panel" aria-labelledby="quakeListHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="quakeListHeading">Strongest earthquakes</h2>
+              <p id="quakeListSub" class="panel-sub">Past 24 hours, by magnitude</p>
+            </div>
+          </div>
+          <div id="quakeList"><div class="empty"><svg data-icon="activity"></svg><p>Loading earthquakes…</p></div></div>
+        </section>
+      </div>
+
+      <section class="panel map-panel" aria-label="Earthquake map">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="map-card">
+            <div class="map-card-title">Time range</div>
+            <label class="switch"><input type="checkbox" id="togglePastWeek"> Show past 7 days</label>
+            <p id="eqStatus" class="map-card-note">Loading earthquakes…</p>
+          </div>
+          <div class="map-card">
+            <div class="map-card-title">Depth</div>
+            <div id="depthLegend"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>The Nerd Map · Live environmental data from public sources</span>
+      <span>Data: Open-Meteo, RainViewer, NASA GIBS, NIFC and USGS · <a href="about.html">About the data</a></span>
+    </div>
+  </footer>
+</body>
+</html>
