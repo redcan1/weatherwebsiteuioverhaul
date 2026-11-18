@@ -36,6 +36,8 @@ const ICONS = {
   alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"/>',
   map: '<path d="M14.1 6.03a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 5.1v12.28a1 1 0 0 1-.55.9l-4.56 2.28a2 2 0 0 1-1.79 0l-4.21-2.1a2 2 0 0 0-1.79 0l-3.66 1.83A1 1 0 0 1 3 19.38V7.1a1 1 0 0 1 .55-.9l4.56-2.28a2 2 0 0 1 1.79 0zM15 5.76v15M9 3.24v15"/>',
   clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  maximize: '<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  minimize: '<path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/>',
   ruler: '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0ZM14.5 12.5l2-2M11.5 9.5l2-2M8.5 6.5l2-2M17.5 15.5l2-2"/>',
 };
 
@@ -190,10 +192,71 @@ function createBaseMap({ center = DEFAULT_CENTER, zoom = 8, basemap = "light" } 
     L.tileLayer(style.labels, { pane: "labels", maxNativeZoom: style.maxNativeZoom, maxZoom: 19 }).addTo(map);
   }
 
+  addFullscreenControl(map);
+
   // The map sits inside a grid layout, so recalculate its size once layout settles.
   setTimeout(() => map.invalidateSize(), 100);
 
   return map;
+}
+
+// Full-screen button (under the zoom buttons). Expands the whole map panel so the
+// layer toggles and legends come along. Browsers without the Fullscreen API for
+// elements (iPhone Safari) get a "fill the window" fallback instead.
+function addFullscreenControl(map) {
+  const panel = map.getContainer().closest(".map-panel");
+  if (!panel) return;
+
+  const isFullscreen = () => document.fullscreenElement === panel || panel.classList.contains("is-fullscreen");
+
+  const setWindowFill = (on) => {
+    panel.classList.toggle("is-fullscreen", on);
+    document.body.classList.toggle("map-fullscreen-open", on);
+    update();
+  };
+
+  let button;
+  function update() {
+    if (!button) return;
+    const on = isFullscreen();
+    button.innerHTML = icon(on ? "minimize" : "maximize");
+    button.title = on ? "Exit full screen" : "Full screen";
+    button.setAttribute("aria-label", button.title);
+    button.setAttribute("aria-pressed", String(on));
+    requestAnimationFrame(() => map.invalidateSize());
+  }
+
+  function toggle() {
+    if (isFullscreen()) {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else setWindowFill(false);
+    } else if (panel.requestFullscreen) {
+      panel.requestFullscreen().catch(() => setWindowFill(true));
+    } else {
+      setWindowFill(true);
+    }
+  }
+
+  const control = L.control({ position: "topleft" });
+  control.onAdd = () => {
+    const bar = L.DomUtil.create("div", "leaflet-bar");
+    button = L.DomUtil.create("a", "map-fullscreen-btn", bar);
+    button.href = "#";
+    button.setAttribute("role", "button");
+    L.DomEvent.disableClickPropagation(bar);
+    L.DomEvent.on(button, "click", (e) => {
+      L.DomEvent.preventDefault(e);
+      toggle();
+    });
+    update();
+    return bar;
+  };
+  control.addTo(map);
+
+  document.addEventListener("fullscreenchange", update);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panel.classList.contains("is-fullscreen")) setWindowFill(false);
+  });
 }
 
 // A small "you are here" dot used on every map.
