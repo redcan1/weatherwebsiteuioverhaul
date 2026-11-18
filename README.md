@@ -48,6 +48,7 @@ It overwrites the `.html` files in `frontend/`, so don't edit those by hand. Pag
 | `aurora.html` + `aurora.js` | NOAA OVATION aurora probability map, viewing chance and Kp index chart |
 | `ocean.html` + `ocean.js` | Nearest NOAA tide station, upcoming tides, tide chart, waves/swell/sea temperature |
 | `iss.html` + `iss.js` | Live ISS position, ground track, footprint and passes over you (computed in the browser with satellite.js) |
+| `login.html` | Placeholder for a future login (says "Feature to be implemented"); linked from the header's Log in button |
 | `about.html` | What the site is and where every piece of data comes from |
 
 The location a visitor picks is saved in `localStorage`, so every page opens on the same place.

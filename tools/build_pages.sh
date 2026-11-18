@@ -67,6 +67,7 @@ ${script_tags}</head>
         <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
       </nav>
+      <a class="btn btn-secondary login-btn" href="login.html"><svg data-icon="user"></svg><span>Log in</span></a>
     </div>
   </header>
 
@@ -622,6 +623,21 @@ $LOCATION_PANEL
             <div id="depthLegend"></div>
           </div>
         </div>
+      </section>
+    </div>
+EOF
+
+# --------------------------------------------------------------------------
+# Log in (placeholder)
+# --------------------------------------------------------------------------
+page login.html "Log in" "Accounts for The Nerd Map are coming soon." "" no <<EOF
+    <div class="narrow placeholder-page">
+      <section class="panel placeholder" aria-labelledby="loginHeading">
+        <div class="placeholder-icon"><svg data-icon="user"></svg></div>
+        <h1 id="loginHeading">Log in</h1>
+        <p class="lede">Feature to be implemented.</p>
+        <p class="panel-sub">Accounts aren't available yet. Everything on The Nerd Map works without one; your location, saved places and units are kept in this browser.</p>
+        <a class="btn btn-primary" href="index.html">Back to the map</a>
       </section>
     </div>
 EOF

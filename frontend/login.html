@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in · The Nerd Map</title>
+  <meta name="description" content="Accounts for The Nerd Map are coming soon.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#134b70" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e141c" media="(prefers-color-scheme: dark)">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+
+  <script src="common.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="The Nerd Map home">
+        <img src="thenerdmap.png" alt="The Nerd Map" width="122" height="52">
+      </a>
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="index.html"><svg data-icon="cloud-sun"></svg><span>Weather</span></a>
+        <a class="tab" href="severe.html"><svg data-icon="alert"></svg><span>Severe Weather</span></a>
+        <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
+        <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
+        <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
+        <a class="tab" href="events.html"><svg data-icon="map"></svg><span>Natural Events</span></a>
+        <a class="tab" href="aurora.html"><svg data-icon="sun"></svg><span>Aurora</span></a>
+        <a class="tab" href="ocean.html"><svg data-icon="waves"></svg><span>Ocean</span></a>
+        <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
+        <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
+      </nav>
+      <a class="btn btn-secondary login-btn" href="login.html"><svg data-icon="user"></svg><span>Log in</span></a>
+    </div>
+  </header>
+
+  <main id="main" class="container page" tabindex="-1">
+    <div class="narrow placeholder-page">
+      <section class="panel placeholder" aria-labelledby="loginHeading">
+        <div class="placeholder-icon"><svg data-icon="user"></svg></div>
+        <h1 id="loginHeading">Log in</h1>
+        <p class="lede">Feature to be implemented.</p>
+        <p class="panel-sub">Accounts aren't available yet. Everything on The Nerd Map works without one; your location, saved places and units are kept in this browser.</p>
+        <a class="btn btn-primary" href="index.html">Back to the map</a>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>The Nerd Map · Live environmental data from public sources</span>
+      <span>Data: Open-Meteo, NOAA, NASA, USGS, NIFC, RainViewer and CelesTrak · <a href="about.html">About the data</a></span>
+    </div>
+  </footer>
+</body>
+</html>

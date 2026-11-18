@@ -10,13 +10,13 @@
 //
 // Bump VERSION when the list of site files changes.
 
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `nerdmap-shell-${VERSION}`;
 const DATA_CACHE = `nerdmap-data-${VERSION}`;
 const TILE_CACHE = `nerdmap-tiles-${VERSION}`;
 const MAX_TILES = 800;
 
-const PAGES = ["index.html", "severe.html", "wildfires.html", "seismic.html", "air.html", "events.html", "aurora.html", "ocean.html", "iss.html", "about.html"];
+const PAGES = ["index.html", "severe.html", "wildfires.html", "seismic.html", "air.html", "events.html", "aurora.html", "ocean.html", "iss.html", "about.html", "login.html"];
 const SHELL_FILES = [
   "./",
   ...PAGES,
