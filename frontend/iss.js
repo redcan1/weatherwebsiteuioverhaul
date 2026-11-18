@@ -15,13 +15,29 @@ let follow = true;
 let lastTrackAt = 0;
 
 const EARTH_RADIUS_KM = 6371;
-const KM_TO_MI = 0.621371;
 const MIN_PASS_ELEVATION = 10; // degrees above the horizon
 
 // ==========================================================================
 // Orbit data
 // ==========================================================================
-async function loadTle() {
+const TLE_CACHE_KEY = "iss_tle";
+const TLE_CACHE_MS = 2 * 60 * 60 * 1000;
+
+function useTle(line1, line2) {
+  satrec = satellite.twoline2satrec(line1, line2);
+  tleEpoch = epochFromTle(line1);
+}
+
+async function loadTle({ fresh = false } = {}) {
+  if (!fresh) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(TLE_CACHE_KEY));
+      if (cached && Date.now() - cached.time < TLE_CACHE_MS) return useTle(cached.line1, cached.line2);
+    } catch {
+      /* no cache */
+    }
+  }
+
   const sources = [
     async () => {
       const res = await fetch("https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=tle");
@@ -41,8 +57,12 @@ async function loadTle() {
     try {
       const [line1, line2] = await source();
       if (line1?.startsWith("1 ") && line2?.startsWith("2 ")) {
-        satrec = satellite.twoline2satrec(line1, line2);
-        tleEpoch = epochFromTle(line1);
+        useTle(line1, line2);
+        try {
+          localStorage.setItem(TLE_CACHE_KEY, JSON.stringify({ time: Date.now(), line1, line2 }));
+        } catch {
+          /* storage blocked */
+        }
         return;
       }
     } catch (e) {
@@ -225,7 +245,7 @@ function renderTrack() {
 
   trackLayer?.remove();
   trackLayer = L.layerGroup([
-    ...splitAtAntimeridian(past).map((seg) => L.polyline(seg, { color: "#134b70", weight: 2, opacity: 0.5, dashArray: "4 6" })),
+    ...splitAtAntimeridian(past).map((seg) => L.polyline(seg, { color: "#5b8fc4", weight: 2, opacity: 0.7, dashArray: "4 6" })),
     ...splitAtAntimeridian(future).map((seg) => L.polyline(seg, { color: "#c0612a", weight: 2.5, opacity: 0.9 })),
   ]).addTo(map);
   lastTrackAt = now;
@@ -245,12 +265,12 @@ function renderStats(passes = lastStats.passes) {
     `
     <div class="stat">
       <div class="stat-label">${icon("satellite")}Altitude</div>
-      <div class="stat-value">${s ? formatNumber(s.altKm * KM_TO_MI) : "—"}${s ? '<span class="stat-unit">mi</span>' : ""}</div>
-      <div class="stat-note">${s ? `${formatNumber(s.altKm)} km above Earth` : "—"}</div>
+      <div class="stat-value">${s ? formatNumber(kmToDisplay(s.altKm)) : "—"}${s ? `<span class="stat-unit">${UNIT.distance}</span>` : ""}</div>
+      <div class="stat-note">${s ? (METRIC ? `${formatNumber(s.altKm * 0.621371)} mi above Earth` : `${formatNumber(s.altKm)} km above Earth`) : "—"}</div>
     </div>
     <div class="stat">
       <div class="stat-label">${icon("wind")}Speed</div>
-      <div class="stat-value">${s ? formatNumber(s.speedKms * 3600 * KM_TO_MI) : "—"}${s ? '<span class="stat-unit">mph</span>' : ""}</div>
+      <div class="stat-value">${s ? formatNumber(kmToDisplay(s.speedKms * 3600)) : "—"}${s ? `<span class="stat-unit">${UNIT.speed}</span>` : ""}</div>
       <div class="stat-note">${s ? "One orbit every ~93 minutes" : "—"}</div>
     </div>
     <div class="stat">
@@ -315,6 +335,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderStats();
 
   const followToggle = $("toggleFollow");
+  // Opened from a shared link with a map view: show that view instead of chasing the ISS.
+  if (OPENED_WITH_MAP_VIEW && followToggle) {
+    follow = false;
+    followToggle.checked = false;
+  }
   followToggle?.addEventListener("change", () => {
     follow = followToggle.checked;
     if (follow) updatePosition();
@@ -341,4 +366,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     setText("issNote", `Couldn't load the ISS orbit (${e.message}).`);
     setHtml("passList", emptyState("alert", "ISS orbit data is unavailable right now."));
   }
+
+  // Orbit data drifts slowly: fetch fresh elements every 6 hours.
+  autoRefresh(async () => {
+    await loadTle({ fresh: true });
+    renderTrack();
+    renderPasses();
+  }, 360);
 });

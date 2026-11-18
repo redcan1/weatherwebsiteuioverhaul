@@ -83,7 +83,7 @@ async function fetchTides(stationId, interval) {
     datum: "MLLW",
     station: stationId,
     time_zone: "gmt",
-    units: "english",
+    units: METRIC ? "metric" : "english",
     interval,
     format: "json",
   });
@@ -109,7 +109,7 @@ function formatUntil(ms) {
 }
 
 const tideClock = (date) => date.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
-const feet = (v) => `${v.toFixed(1)} ft`;
+const feet = (v) => `${v.toFixed(1)} ${UNIT.height}`;
 
 let tideExtremes = [];
 
@@ -162,7 +162,7 @@ function renderTideChart(curve) {
     yMin: lo,
     yMax: ticks[ticks.length - 1],
     yTicks: ticks,
-    formatValue: (v) => `${v.toFixed(1)} ft`,
+    formatValue: (v) => feet(v),
     formatNote: (d) => tideClock(d.time),
     labelEvery: 6, // every 3 hours at 30-minute steps
     ariaLabel: `Predicted tide height for the next 24 hours, between ${Math.min(...points.map((p) => p.value)).toFixed(1)} and ${Math.max(...points.map((p) => p.value)).toFixed(1)} feet.`,
@@ -222,8 +222,8 @@ async function fetchMarineRaw(lat, lon) {
     longitude: lon,
     current:
       "wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature",
-    length_unit: "imperial",
-    temperature_unit: "fahrenheit",
+    length_unit: METRIC ? "metric" : "imperial",
+    temperature_unit: UNIT.openMeteo.temperature_unit,
     timezone: "auto",
   });
   const res = await fetch(`https://marine-api.open-meteo.com/v1/marine?${params}`);
@@ -255,9 +255,9 @@ function renderMarine() {
 
   box.innerHTML = `
     <div class="stat-grid">
-      ${tile("Waves", "waves", fixed(c.wave_height), "ft", c.wave_period != null ? `${fixed(c.wave_period, 0)} s period · from ${compass(c.wave_direction)}` : "")}
-      ${tile("Swell", "wind", fixed(c.swell_wave_height), "ft", c.swell_wave_period != null ? `${fixed(c.swell_wave_period, 0)} s period · from ${compass(c.swell_wave_direction)}` : "")}
-      ${tile("Sea temperature", "thermometer", c.sea_surface_temperature != null ? Math.round(c.sea_surface_temperature) : null, "°F")}
+      ${tile("Waves", "waves", fixed(c.wave_height), UNIT.height, c.wave_period != null ? `${fixed(c.wave_period, 0)} s period · from ${compass(c.wave_direction)}` : "")}
+      ${tile("Swell", "wind", fixed(c.swell_wave_height), UNIT.height, c.swell_wave_period != null ? `${fixed(c.swell_wave_period, 0)} s period · from ${compass(c.swell_wave_direction)}` : "")}
+      ${tile("Sea temperature", "thermometer", c.sea_surface_temperature != null ? Math.round(c.sea_surface_temperature) : null, UNIT.temp)}
       ${tile("Updated", "clock", c.time ? formatClock(c.time) : null, "", "Local time")}
     </div>
     <p class="updated">Conditions ${escapeHtml(marine.placeLabel)}</p>`;
@@ -345,12 +345,12 @@ function renderStats() {
     </div>
     <div class="stat">
       <div class="stat-label">${icon("wind")}Wave height</div>
-      <div class="stat-value">${c?.wave_height != null ? `${Number(c.wave_height).toFixed(1)}<span class="stat-unit">ft</span>` : "—"}</div>
+      <div class="stat-value">${c?.wave_height != null ? `${Number(c.wave_height).toFixed(1)}<span class="stat-unit">${UNIT.height}</span>` : "—"}</div>
       <div class="stat-note">${c?.wave_period != null ? `${Number(c.wave_period).toFixed(0)} s period` : "—"}</div>
     </div>
     <div class="stat">
       <div class="stat-label">${icon("thermometer")}Sea temperature</div>
-      <div class="stat-value">${c?.sea_surface_temperature != null ? `${Math.round(c.sea_surface_temperature)}<span class="stat-unit">°F</span>` : "—"}</div>
+      <div class="stat-value">${c?.sea_surface_temperature != null ? `${Math.round(c.sea_surface_temperature)}<span class="stat-unit">${UNIT.temp}</span>` : "—"}</div>
       <div class="stat-note">${marine ? escapeHtml(marine.placeLabel) : "—"}</div>
     </div>
   `
@@ -366,7 +366,7 @@ function renderStationPanel() {
       ${icon("waves")}
       <div>
         <div class="loc-name">${escapeHtml(stationLabel(s))}</div>
-        <div class="loc-meta">NOAA station ${escapeHtml(s.id)}${selected.miles != null ? ` · ${formatNumber(selected.miles)} mi away` : ""}</div>
+        <div class="loc-meta">NOAA station ${escapeHtml(s.id)}${selected.miles != null ? ` · ${formatNumber(toDistance(selected.miles))} ${UNIT.distance} away` : ""}</div>
       </div>
     </div>
     <p class="updated"><a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=${encodeURIComponent(s.id)}" target="_blank" rel="noopener">Station page on NOAA Tides &amp; Currents ↗</a> · Tap any blue dot on the map to switch stations.</p>`;
@@ -413,7 +413,7 @@ function useLocation(location, source) {
     setText("stationSub", "NOAA tide stations cover US coasts and territories");
     setHtml(
       "stationOut",
-      emptyState("waves", near ? `The nearest NOAA tide station is ${formatNumber(near.miles)} miles away, too far to be useful. Tap any blue dot on the map to pick one.` : "Loading tide stations…")
+      emptyState("waves", near ? `The nearest NOAA tide station is ${formatNumber(toDistance(near.miles))} ${METRIC ? "km" : "miles"} away, too far to be useful. Tap any blue dot on the map to pick one.` : "Loading tide stations…")
     );
     setHtml("tideTable", emptyState("waves", "No nearby tide station."));
     setHtml("tideChart", emptyState("waves", "Tides are available near US coasts."));
@@ -429,7 +429,7 @@ function renderLegend() {
     "oceanLegend",
     `<div class="legend-row"><span class="swatch" style="background:#2a78d6"></span>NOAA tide station</div>
      <div class="legend-row"><span class="swatch" style="background:#c0612a"></span>Selected station</div>
-     <div class="legend-row"><span class="swatch" style="background:#134b70"></span>Your location</div>`
+     <div class="legend-row"><span class="swatch" style="background:#2a78d6"></span>Your location</div>`
   );
 }
 
@@ -449,4 +449,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Wait for the station list so a saved location can be matched to its nearest station.
   setupLocationPanel(useLocation);
+
+  // Tide times don't change, but "in 2 hr" does: re-render every 5 minutes.
+  autoRefresh(() => {
+    renderTideTable();
+    renderStats();
+  }, 5);
+  // Sea conditions refresh every 30 minutes.
+  autoRefresh(async () => {
+    if (!currentLocation) return;
+    const near = stations.length ? nearestStation(currentLocation.latitude, currentLocation.longitude) : null;
+    await loadMarine(currentLocation, near && near.miles <= NEAR_MILES ? near : null);
+  }, 30);
 });

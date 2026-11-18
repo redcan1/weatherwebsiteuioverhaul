@@ -50,7 +50,7 @@ function toFire(props) {
 function firePopup(fire) {
   return popupHtml(fire.name, [
     ["State", fire.state],
-    ["Size", `${formatNumber(fire.acres)} acres`],
+    ["Size", `${formatNumber(toArea(fire.acres))} ${METRIC ? "hectares" : "acres"}`],
     ["Contained", fire.contained == null ? null : `${fire.contained}%`],
     ["Discovered", fire.discovered ? formatDate(fire.discovered) : null],
     ["Perimeter updated", fire.updated ? formatRelative(fire.updated) : null],
@@ -123,16 +123,16 @@ function renderStats() {
     </div>
     <div class="stat">
       <div class="stat-label">${icon("map")}Area burned</div>
-      <div class="stat-value">${formatNumber(totalAcres)}<span class="stat-unit">ac</span></div>
+      <div class="stat-value">${formatNumber(toArea(totalAcres))}<span class="stat-unit">${UNIT.area}</span></div>
     </div>
     <div class="stat">
       <div class="stat-label">${icon("alert")}Largest</div>
-      <div class="stat-value">${largest ? `${formatNumber(largest.acres)}<span class="stat-unit">ac</span>` : "—"}</div>
+      <div class="stat-value">${largest ? `${formatNumber(toArea(largest.acres))}<span class="stat-unit">${UNIT.area}</span>` : "—"}</div>
       <div class="stat-note">${largest ? escapeHtml(largest.name) : "—"}</div>
     </div>
     <div class="stat">
       <div class="stat-label">${icon("ruler")}Nearest to you</div>
-      <div class="stat-value">${nearest ? formatNumber(nearest.miles) : "—"}<span class="stat-unit">${nearest ? "mi" : ""}</span></div>
+      <div class="stat-value">${nearest ? formatNumber(toDistance(nearest.miles)) : "—"}<span class="stat-unit">${nearest ? UNIT.distance : ""}</span></div>
       <div class="stat-note">${nearest ? escapeHtml(nearest.fire.name) : "Set a location to see"}</div>
     </div>
   `
@@ -164,7 +164,7 @@ function renderList() {
           <span class="list-meta">${escapeHtml([fire.state, contained].filter(Boolean).join(" · "))}</span>
           <span class="meter" aria-hidden="true"><span style="width:${fire.contained ?? 0}%"></span></span>
         </span>
-        <span class="list-value">${formatNumber(fire.acres)} ac</span>
+        <span class="list-value">${formatNumber(toArea(fire.acres))} ${UNIT.area}</span>
       </button>`;
     li.querySelector("button").addEventListener("click", () => focusFire(fire));
     return li;
@@ -182,7 +182,7 @@ function updateDotVisibility() {
   else if (!map.hasLayer(fireDots)) fireDots.addTo(map);
 }
 
-async function loadPerimeters() {
+async function loadPerimeters({ fit = true } = {}) {
   const button = $("btnReloadPerimeters");
   if (button) button.disabled = true;
   setText("wfStatus", "Loading fire perimeters…");
@@ -224,7 +224,7 @@ async function loadPerimeters() {
     );
     updateDotVisibility();
 
-    if (fires.length > 0) map.fitBounds(perimetersLayer.getBounds(), { padding: [30, 30] });
+    if (fit && fires.length > 0) map.fitBounds(perimetersLayer.getBounds(), { padding: [30, 30] });
 
     renderStats();
     renderList();
@@ -270,4 +270,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadPerimeters();
   restoreSavedLocation(useLocation);
+
+  // Auto-refresh perimeters every 15 minutes without moving the map.
+  autoRefresh(() => loadPerimeters({ fit: false }), 15);
 });

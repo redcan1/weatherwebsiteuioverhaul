@@ -22,6 +22,16 @@ bash tools/build_pages.sh
 
 It overwrites the `.html` files in `frontend/`, so don't edit those by hand. Page behaviour lives in the `.js` files, which the script doesn't touch.
 
+## Features across every page
+
+- **°F / °C switch** in the header (stored in `localStorage`, applied by reloading). Pages read `UNIT` / `METRIC` from `common.js`.
+- **Saved places**: save the current location and switch between up to 8 places from the Location panel.
+- **Shareable links**: the URL carries `lat`, `lon`, `name` and `map=lat,lon,zoom`; **Share** copies it (or opens the phone share sheet).
+- **Auto-refresh**: each page re-fetches its data with `autoRefresh(task, minutes)` while the tab is visible (5 min for alerts and quakes, 10 for weather and radar, longer for slower sources).
+- **Dark mode** follows the system setting, including Esri's dark gray basemap.
+- **Installable app (PWA)**: `manifest.webmanifest` + `sw.js`. Site files are network-first with an offline fallback; map tiles are cache-first; API responses are kept for offline use. **Bump `VERSION` in `sw.js` when you add or rename site files.**
+- **Accessibility**: skip link, labelled controls, WCAG AA colour contrast in both themes (checked with axe-core).
+
 ## Layout
 
 | File | Purpose |

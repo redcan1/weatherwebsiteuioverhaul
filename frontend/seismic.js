@@ -121,7 +121,7 @@ function renderStats(quakes) {
     </div>
     <div class="stat">
       <div class="stat-label">${icon("ruler")}Nearest to you</div>
-      <div class="stat-value">${nearest ? formatNumber(nearest.miles) : "—"}<span class="stat-unit">${nearest ? "mi" : ""}</span></div>
+      <div class="stat-value">${nearest ? formatNumber(toDistance(nearest.miles)) : "—"}<span class="stat-unit">${nearest ? UNIT.distance : ""}</span></div>
       <div class="stat-note">${nearest ? `M ${nearest.quake.mag.toFixed(1)} · ${escapeHtml(nearest.quake.place)}` : "Set a location to see"}</div>
     </div>
   `
@@ -217,4 +217,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     setText("eqStatus", `Couldn't load earthquake data (${e.message}).`);
     setHtml("quakeList", emptyState("alert", "Earthquake data is unavailable right now."));
   }
+
+  // Auto-refresh earthquakes every 5 minutes.
+  autoRefresh(async () => {
+    allQuakes = await fetchEarthquakes(7);
+    render();
+  }, 5);
 });

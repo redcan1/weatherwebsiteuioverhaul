@@ -145,7 +145,7 @@ function renderStats() {
     </div>
     <div class="stat">
       <div class="stat-label">${icon("ruler")}Nearest to you</div>
-      <div class="stat-value">${nearest ? formatNumber(nearest.miles) : "—"}<span class="stat-unit">${nearest ? "mi" : ""}</span></div>
+      <div class="stat-value">${nearest ? formatNumber(toDistance(nearest.miles)) : "—"}<span class="stat-unit">${nearest ? UNIT.distance : ""}</span></div>
       <div class="stat-note">${nearest ? escapeHtml(nearest.event.title) : "Set a location to see"}</div>
     </div>
   `
@@ -251,4 +251,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     setText("eventStatus", `Couldn't load events (${e.message}).`);
     setHtml("eventList", emptyState("alert", "NASA EONET is unavailable right now."));
   }
+
+  // Auto-refresh events every 30 minutes (EONET updates through the day).
+  autoRefresh(async () => {
+    events = await fetchEvents();
+    renderFilters();
+    render();
+    setText("eventStatus", `Updated ${nowClock()}`);
+  }, 30);
 });

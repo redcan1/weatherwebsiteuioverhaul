@@ -257,4 +257,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderStats();
   renderViewing();
+
+  // Auto-refresh every 15 minutes (OVATION updates about every 30).
+  autoRefresh(async () => {
+    const [o, k] = await Promise.allSettled([loadOvation(), loadKp()]);
+    if (o.status === "fulfilled") renderAurora();
+    if (k.status === "fulfilled") renderKpChart();
+    renderStats();
+    renderViewing();
+  }, 15);
 });

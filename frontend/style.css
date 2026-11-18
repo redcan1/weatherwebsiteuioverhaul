@@ -13,25 +13,34 @@
   --border: #e4e8ee;
   --border-strong: #d3d9e2;
 
-  /* Ink */
+  /* Ink (all text tokens meet WCAG AA 4.5:1 on every surface) */
   --ink: #0e1a2b;
   --ink-2: #475467;
-  --muted: #7a8699;
+  --muted: #5f6b7d;
 
   /* Brand (from the logo) */
-  --brand: #134b70;
+  --brand: #134b70; /* text + icons */
+  --brand-fill: #134b70; /* filled controls with white text */
   --brand-hover: #0e3a57;
   --brand-tint: #e9f1f7;
-  --accent: #c0612a;
+  --accent: #a4501c; /* accent text (eyebrows) */
+  --accent-mark: #c0612a; /* accent dots and marks */
 
   /* Status */
   --danger: #c23434;
   --danger-tint: #fdf0f0;
+  --good: #0f7b3f;
+  --good-tint: #e3f4e8;
 
   /* Charts */
   --grid: #e7eaef;
   --axis: #c9d0da;
-  --series-1: #2a78d6;
+  --series-1: #2a78d6; /* marks: lines, bars, ranges */
+  --series-text: #1f63b5; /* the same blue for small text */
+
+  /* Floating surfaces */
+  --header-bg: rgba(255, 255, 255, 0.92);
+  --card-bg: rgba(255, 255, 255, 0.96);
 
   /* Shape */
   --radius: 16px;
@@ -41,6 +50,89 @@
 
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --header-h: 72px;
+}
+
+/* Dark mode follows the system setting. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bg: #0e141c;
+    --surface: #141c26;
+    --surface-sunken: #1b2531;
+    --border: #263241;
+    --border-strong: #344255;
+
+    --ink: #e6ebf1;
+    --ink-2: #b3bfcc;
+    --muted: #8d9aab;
+
+    --brand: #8ec2ee;
+    --brand-fill: #2c6ca3;
+    --brand-hover: #357dbb;
+    --brand-tint: #1d3048;
+    --accent: #e59a66;
+    --accent-mark: #e59a66;
+
+    --danger: #f08a8a;
+    --danger-tint: #3a1f24;
+    --good: #6fd39a;
+    --good-tint: #183626;
+
+    --grid: #263241;
+    --axis: #3d4b5e;
+    --series-1: #6aa9ef;
+    --series-text: #6aa9ef;
+
+    --header-bg: rgba(20, 28, 38, 0.92);
+    --card-bg: rgba(20, 28, 38, 0.95);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
+  }
+
+  /* The logo has a white background, so give it a light badge. */
+  .brand img {
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  /* Leaflet's built-in UI is white; match the dark theme. */
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip,
+  .leaflet-tooltip {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .leaflet-tooltip {
+    border-color: var(--border);
+  }
+
+  .leaflet-tooltip-top::before {
+    border-top-color: var(--surface);
+  }
+
+  .leaflet-bar a,
+  .leaflet-bar a:hover {
+    background: var(--surface) !important;
+    color: var(--ink) !important;
+    border-bottom-color: var(--border) !important;
+  }
+
+  .leaflet-container .leaflet-control-attribution {
+    background: rgba(20, 28, 38, 0.8);
+    color: var(--muted);
+  }
+
+  .leaflet-container a.leaflet-popup-close-button {
+    color: var(--muted);
+  }
+
+  .leaflet-container a {
+    color: var(--brand);
+  }
 }
 
 /* ==========================================================================
@@ -119,7 +211,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 1100; /* above Leaflet panes and controls */
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--border);
 }
@@ -200,9 +292,9 @@ a {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--brand);
+  background: var(--brand-fill);
   color: #fff;
-  box-shadow: 0 0 0 3px #fff, var(--shadow);
+  box-shadow: 0 0 0 3px var(--surface), var(--shadow);
 }
 
 .iss-icon .icon {
@@ -211,13 +303,13 @@ a {
 }
 
 .badge.visible {
-  background: #e3f4e8;
-  color: #0f7b3f;
+  background: var(--good-tint);
+  color: var(--good);
 }
 
 .level-tag.good {
-  background: #e3f4e8;
-  color: #0f7b3f;
+  background: var(--good-tint);
+  color: var(--good);
 }
 
 /* Ten tabs: drop the icons and tighten padding below wide-desktop widths */
@@ -304,7 +396,7 @@ a {
   height: 30px;
   padding: 0;
   border-radius: 50%;
-  background: var(--brand);
+  background: var(--brand-fill);
   color: #fff;
 }
 
@@ -499,7 +591,7 @@ a {
 }
 
 .btn-primary {
-  background: var(--brand);
+  background: var(--brand-fill);
   color: #fff;
 }
 
@@ -631,7 +723,7 @@ a {
 }
 
 .switch input:checked {
-  background: var(--brand);
+  background: var(--brand-fill);
 }
 
 .switch input:checked::after {
@@ -985,7 +1077,7 @@ a {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--brand);
+  background: var(--brand-fill);
 }
 
 /* ==========================================================================
@@ -1116,7 +1208,7 @@ a {
   display: flex;
   align-items: center;
   gap: 2px;
-  color: var(--series-1);
+  color: var(--series-text);
   font-size: 12px;
   font-weight: 500;
 }
@@ -1161,7 +1253,7 @@ a {
 }
 
 .day-pop {
-  color: var(--series-1);
+  color: var(--series-text);
   font-size: 13px;
   font-weight: 500;
 }
@@ -1391,7 +1483,7 @@ body.map-fullscreen-open {
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--card-bg);
   box-shadow: var(--shadow);
   font-size: 12px;
 }
@@ -1720,4 +1812,199 @@ body.map-fullscreen-open {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ==========================================================================
+   Header tools: °F / °C switch
+   ========================================================================== */
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.units-toggle {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+}
+
+.units-toggle button {
+  min-width: 38px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.units-toggle button[aria-pressed="true"] {
+  background: var(--brand-fill);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 760px) {
+  .header-tools {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .tabs {
+    order: 3;
+  }
+}
+
+/* ==========================================================================
+   Location panel: save / share, saved places
+   ========================================================================== */
+.loc-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.loc-actions .btn[hidden] {
+  display: none;
+}
+
+.loc-actions .icon {
+  width: 16px;
+  height: 16px;
+}
+
+#btnSavePlace.is-saved {
+  color: var(--accent);
+}
+
+#btnSavePlace.is-saved .icon {
+  fill: currentColor;
+}
+
+.saved-places {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.saved-places[hidden] {
+  display: none;
+}
+
+.saved-title {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.place-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.place {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.place.is-current {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+}
+
+.place button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.place-select {
+  padding: 5px 4px 5px 10px;
+  font-weight: 500;
+}
+
+.place-select .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--brand);
+}
+
+.place-remove {
+  padding: 5px 8px 5px 4px;
+  color: var(--muted) !important;
+}
+
+.place-remove:hover {
+  color: var(--danger) !important;
+}
+
+.place-remove .icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* ==========================================================================
+   Offline notice + skip link
+   ========================================================================== */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #9a4a18; /* white text 6:1 in both themes */
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.offline-banner[hidden] {
+  display: none;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 3000;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-fill);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+/* The skip link moves focus to <main>; no outline needed on the container itself. */
+main:focus {
+  outline: none;
 }

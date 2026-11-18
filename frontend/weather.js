@@ -54,6 +54,21 @@ const deg = (value) => `${Math.round(value)}°`;
 // ==========================================================================
 // Rendering
 // ==========================================================================
+// WHO/EPA UV index categories (shown with a label, never color alone).
+function uvLevel(uv) {
+  const v = Math.round(uv ?? 0);
+  if (v <= 2) return { label: "Low", advice: "UV is low today. No sun protection needed for most people." };
+  if (v <= 5) return { label: "Moderate", advice: "Moderate UV at midday. Sunscreen and sunglasses are a good idea." };
+  if (v <= 7) return { label: "High", advice: "High UV at midday. Wear sunscreen and a hat, and seek shade 10 AM–4 PM." };
+  if (v <= 10) return { label: "Very high", advice: "Very high UV. Unprotected skin can burn quickly; limit midday sun." };
+  return { label: "Extreme", advice: "Extreme UV. Avoid the sun around midday and cover up outdoors." };
+}
+
+function daylightText(seconds) {
+  const minutes = Math.round((seconds || 0) / 60);
+  return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+}
+
 function renderCurrent(data) {
   const c = data.current;
   const today = data.daily;
@@ -65,7 +80,7 @@ function renderCurrent(data) {
     <div class="hero">
       ${icon(sky.icon)}
       <div>
-        <div class="hero-value">${Math.round(c.temperature_2m)}<small>°F</small></div>
+        <div class="hero-value">${Math.round(c.temperature_2m)}<small>${UNIT.temp}</small></div>
         <div class="hero-label">${escapeHtml(sky.label)}</div>
       </div>
     </div>
@@ -79,20 +94,32 @@ function renderCurrent(data) {
       </div>
       <div class="stat">
         <div class="stat-label">${icon("wind")}Wind</div>
-        <div class="stat-value">${Math.round(c.wind_speed_10m)}<span class="stat-unit">mph ${compassDirection(c.wind_direction_10m)}</span></div>
-        <div class="stat-note">Gusts ${Math.round(c.wind_gusts_10m)} mph</div>
+        <div class="stat-value">${Math.round(c.wind_speed_10m)}<span class="stat-unit">${UNIT.wind} ${compassDirection(c.wind_direction_10m)}</span></div>
+        <div class="stat-note">Gusts ${Math.round(c.wind_gusts_10m)} ${UNIT.wind}</div>
       </div>
       <div class="stat">
         <div class="stat-label">${icon("rain")}Precipitation</div>
-        <div class="stat-value">${formatNumber(c.precipitation, 2)}<span class="stat-unit">in</span></div>
-        <div class="stat-note">Today ${formatNumber(today.precipitation_sum[0], 2)} in</div>
+        <div class="stat-value">${formatNumber(c.precipitation, UNIT.precipDigits)}<span class="stat-unit">${UNIT.precip}</span></div>
+        <div class="stat-note">Today ${formatNumber(today.precipitation_sum[0], UNIT.precipDigits)} ${UNIT.precip}</div>
       </div>
       <div class="stat">
-        <div class="stat-label">${icon("sun")}Daylight</div>
+        <div class="stat-label">${icon("gauge")}Pressure</div>
+        <div class="stat-value">${METRIC ? formatNumber(c.pressure_msl, 0) : formatNumber(c.pressure_msl * 0.02953, 2)}<span class="stat-unit">${METRIC ? "hPa" : "inHg"}</span></div>
+        <div class="stat-note">At sea level</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">${icon("uv")}UV index</div>
+        <div class="stat-value">${c.uv_index != null ? formatNumber(c.uv_index, 0) : "—"}<span class="stat-unit">${c.uv_index != null ? uvLevel(c.uv_index).label : ""}</span></div>
+        <div class="stat-note">Max ${formatNumber(today.uv_index_max[0], 0)} today</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">${icon("sunrise")}Sunrise</div>
         <div class="stat-value">${formatClock(today.sunrise[0])}</div>
         <div class="stat-note">Sunset ${formatClock(today.sunset[0])}</div>
+        <div class="stat-note">${daylightText(today.daylight_duration[0])} of daylight</div>
       </div>
     </div>
+    <p class="health">${escapeHtml(uvLevel(today.uv_index_max[0]).advice)}</p>
     <p class="updated">Updated ${formatClock(c.time)} local time · ${data.latitude.toFixed(2)}°, ${data.longitude.toFixed(2)}°</p>
   `
   );
@@ -108,7 +135,7 @@ function renderHourly(data) {
     const sky = describeWeather(hourly.weather_code[i], hourly.is_day[i]);
     const pop = hourly.precipitation_probability[i] ?? 0;
     return `
-      <li class="hour" title="${escapeHtml(sky.label)} · Humidity ${hourly.relative_humidity_2m[i]}% · Precip ${hourly.precipitation[i]} in">
+      <li class="hour" title="${escapeHtml(sky.label)} · Humidity ${hourly.relative_humidity_2m[i]}% · Precip ${hourly.precipitation[i]} ${UNIT.precip}">
         <span class="hour-time">${formatHour(time)}</span>
         ${icon(sky.icon)}
         <span class="hour-temp">${deg(hourly.temperature_2m[i])}</span>
@@ -133,7 +160,7 @@ function renderDaily(data) {
     const name = i === 0 ? "Today" : formatLocalTime(date, { weekday: "short" });
 
     return `
-      <li class="day" title="${escapeHtml(sky.label)} · ${formatNumber(d.precipitation_sum[i], 2)} in">
+      <li class="day" title="${escapeHtml(sky.label)} · ${formatNumber(d.precipitation_sum[i], UNIT.precipDigits)} ${UNIT.precip}">
         <span class="day-name">${name}</span>
         ${icon(sky.icon)}
         <span class="day-pop ${pop === 0 ? "dry" : ""}">${pop}%</span>
@@ -149,25 +176,24 @@ function renderDaily(data) {
 // ==========================================================================
 // Open-Meteo forecast
 // ==========================================================================
-async function fetchWeather(lat, lon) {
+async function fetchWeather(lat, lon, { quiet = false } = {}) {
   const params = new URLSearchParams({
     latitude: lat,
     longitude: lon,
     current:
       "temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,precipitation,weather_code,is_day," +
-      "wind_speed_10m,wind_direction_10m,wind_gusts_10m",
+      "wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,pressure_msl",
     hourly:
       "temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,precipitation_probability,weather_code,is_day",
     daily:
-      "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset",
+      "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset," +
+      "daylight_duration,uv_index_max",
     forecast_days: 7,
-    temperature_unit: "fahrenheit",
-    wind_speed_unit: "mph",
-    precipitation_unit: "inch",
+    ...UNIT.openMeteo,
     timezone: "auto",
   });
 
-  setHtml("currentOut", emptyState("clock", "Loading the latest conditions…"));
+  if (!quiet) setHtml("currentOut", emptyState("clock", "Loading the latest conditions…"));
 
   try {
     const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
@@ -187,8 +213,9 @@ async function fetchWeather(lat, lon) {
 // ==========================================================================
 // Humidity: comfort level, 24-hour chart and the regional grid map layer
 // ==========================================================================
-// How the air feels, based on dew point (°F).
-function comfortLevel(dewPointF) {
+// How the air feels, based on dew point (thresholds in °F; metric values are converted).
+function comfortLevel(dewPoint) {
+  const dewPointF = METRIC ? (dewPoint * 9) / 5 + 32 : dewPoint;
   if (dewPointF < 40) return "Dry";
   if (dewPointF < 55) return "Comfortable";
   if (dewPointF < 60) return "Slightly humid";
@@ -217,7 +244,7 @@ function renderHumidityChart(data) {
     yTicks: [0, 25, 50, 75, 100],
     formatValue: (v) => `${v}% humidity`,
     formatNote: (d) =>
-      `${formatLocalTime(d.time, { weekday: "short", hour: "numeric" })} · dew point ${Math.round(d.dewPoint)}°F, feels ${comfortLevel(d.dewPoint).toLowerCase()}`,
+      `${formatLocalTime(d.time, { weekday: "short", hour: "numeric" })} · dew point ${Math.round(d.dewPoint)}${UNIT.temp}, feels ${comfortLevel(d.dewPoint).toLowerCase()}`,
     labelEvery: 3,
     ariaLabel: `Relative humidity for the next 24 hours, between ${Math.min(...values)} and ${Math.max(...values)} percent.`,
   });
@@ -240,7 +267,6 @@ const HUMIDITY_BINS = [
 const humidityColor = (rh) => HUMIDITY_BINS.find((b) => rh < b.max).color;
 
 let humidityGrid = null;
-let currentLocation = null;
 
 async function loadHumidityGrid(location) {
   const half = (GRID_SIZE - 1) / 2;
@@ -322,7 +348,7 @@ function setupHumidityLayer() {
 }
 
 function useLocation(location, source) {
-  currentLocation = location;
+  // (common.js has already set currentLocation to this location)
   if ($("toggleHumidity")?.checked) loadHumidityGrid(location);
   const latLng = [location.latitude, location.longitude];
   const label = location.name || "Your location";
@@ -529,6 +555,36 @@ function enableToggle(id, group) {
   toggle.addEventListener("change", () => setLayerOn(group, toggle.checked));
 }
 
+// Reload radar + satellite frames (auto-refresh), keeping which layers are on and playback.
+async function refreshOverlays() {
+  const wasPlaying = anim.timer !== null;
+  setPlaying(false);
+  [...radar.layers, ...satellite.layers].forEach((layer) => map.removeLayer(layer));
+  anim.times = [];
+  radar.layers = [];
+  Object.assign(satellite, { times: [], layers: [], forStep: [] });
+
+  try {
+    await loadRadarFrames();
+  } catch (e) {
+    console.warn("Radar refresh failed:", e);
+  }
+  try {
+    await loadSatelliteFrames();
+  } catch (e) {
+    console.warn("Satellite refresh failed:", e);
+  }
+  if (!anim.times.length) return;
+
+  const slider = $("radarSlider");
+  if (slider) slider.max = String(anim.times.length - 1);
+  anim.index = anim.times.length - 1;
+  if (radar.on) radar.layers.forEach((layer) => layer.addTo(map));
+  if (satellite.on) satellite.layers.forEach((layer) => layer.addTo(map));
+  refreshPlayer();
+  if (wasPlaying) setPlaying(true);
+}
+
 async function setupOverlays() {
   const notes = [];
 
@@ -564,4 +620,10 @@ document.addEventListener("DOMContentLoaded", () => {
   setupOverlays();
   setupHumidityLayer();
   setupLocationPanel(useLocation);
+
+  // Auto-refresh: conditions and the radar/satellite timeline every 10 minutes.
+  autoRefresh(async () => {
+    if (currentLocation) await fetchWeather(currentLocation.latitude, currentLocation.longitude, { quiet: true });
+    await refreshOverlays();
+  }, 10);
 });

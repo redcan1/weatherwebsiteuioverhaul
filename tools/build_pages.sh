@@ -36,6 +36,10 @@ page() {
   <title>$title · The Nerd Map</title>
   <meta name="description" content="$desc">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#134b70" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e141c" media="(prefers-color-scheme: dark)">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,6 +49,7 @@ ${leaflet_tags}  <link rel="stylesheet" href="style.css">
   <script src="common.js" defer></script>
 ${script_tags}</head>
 <body>
+  <a class="skip-link" href="#main">Skip to main content</a>
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="The Nerd Map home">
@@ -62,10 +67,16 @@ ${script_tags}</head>
         <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
       </nav>
+      <div class="header-tools">
+        <div class="units-toggle" role="group" aria-label="Temperature units">
+          <button type="button" data-units="imperial" aria-label="Fahrenheit and imperial units">°F</button>
+          <button type="button" data-units="metric" aria-label="Celsius and metric units">°C</button>
+        </div>
+      </div>
     </div>
   </header>
 
-  <main class="container page">
+  <main id="main" class="container page" tabindex="-1">
 $(cat)
   </main>
 
@@ -114,7 +125,12 @@ LOCATION_PANEL='        <section class="panel" aria-labelledby="locHeading">
               <div id="locResult" class="loc-meta">Search for a city or use your current location.</div>
             </div>
           </div>
+          <div class="loc-actions">
+            <button id="btnSavePlace" class="btn btn-ghost" type="button" aria-pressed="false" hidden><svg data-icon="star"></svg><span>Save place</span></button>
+            <button id="btnShare" class="btn btn-ghost" type="button" hidden><svg data-icon="share"></svg><span>Share</span></button>
+          </div>
           <p id="locStatus" class="status" role="status" hidden></p>
+          <div id="savedPlaces" class="saved-places" hidden></div>
         </section>'
 
 src() { echo "<a href=\"$1\" $EXT>$2</a>"; }
@@ -515,7 +531,7 @@ $LOCATION_PANEL
             <div class="map-card-title">Tracking</div>
             <label class="switch"><input type="checkbox" id="toggleFollow" checked> Follow the ISS</label>
             <div class="legend-row" style="margin-top:10px"><span class="swatch" style="background:#c0612a"></span>Next 95 minutes</div>
-            <div class="legend-row"><span class="swatch" style="background:#134b70;opacity:.5"></span>Last 45 minutes</div>
+            <div class="legend-row"><span class="swatch" style="background:#5b8fc4"></span>Last 45 minutes</div>
             <div class="legend-row"><span class="swatch" style="background:rgba(192,97,42,.15);box-shadow:inset 0 0 0 1px #c0612a"></span>Can see the ISS now</div>
             <p id="issNote" class="map-card-note">Loading orbit data…</p>
           </div>
@@ -695,7 +711,7 @@ $(source_card map-pin https://leafletjs.com/ "Leaflet" "The open-source JavaScri
         </section>
 
         <div class="row row-2" style="margin-top:0">
-          <div class="callout"><svg data-icon="shield"></svg><p><strong>Your location stays on your device.</strong> When you search for a city or share your location, it's saved in your browser so every page opens on the same place. Its coordinates are only sent to the services listed above, to fetch readings and map tiles. The Nerd Map has no accounts and no analytics.</p></div>
+          <div class="callout"><svg data-icon="shield"></svg><p><strong>Your location stays on your device.</strong> When you search for a city or share your location, it's saved in your browser so every page opens on the same place. Saved places and your °F/°C choice are stored the same way. Its coordinates are only sent to the services listed above, to fetch readings and map tiles, and they appear in the page address so you can share a link; anyone you send a link to sees that place. The Nerd Map has no accounts and no analytics.</p></div>
           <div class="callout warning"><svg data-icon="alert"></svg><p><strong>Not for emergency use.</strong> Data can be delayed, incomplete or based on models. For warnings and safety decisions, rely on official sources such as <a href="https://www.weather.gov/" $EXT>weather.gov</a>, <a href="https://www.airnow.gov/" $EXT>AirNow</a>, <a href="https://inciweb.wildfire.gov/" $EXT>InciWeb</a> and the <a href="https://earthquake.usgs.gov/" $EXT>USGS</a>.</p></div>
         </div>
       </div>

@@ -145,7 +145,7 @@ function renderForecast(data) {
   });
 }
 
-function showOnMap(lat, lon, label, aqi) {
+function showOnMap(lat, lon, label, aqi, keepView = false) {
   const level = aqiLevel(aqi);
   if (marker) marker.remove();
 
@@ -160,13 +160,13 @@ function showOnMap(lat, lon, label, aqi) {
     .bindPopup(popupHtml(label, [["US AQI", aqi ?? "n/a"], ["Category", level.label]]))
     .openPopup();
 
-  map.setView([lat, lon], 9);
+  if (!keepView) map.setView([lat, lon], 9);
 }
 
 // ==========================================================================
 // Open-Meteo air quality
 // ==========================================================================
-async function fetchAirQuality(lat, lon, label) {
+async function fetchAirQuality(lat, lon, label, { quiet = false, keepView = quiet } = {}) {
   const params = new URLSearchParams({
     latitude: lat,
     longitude: lon,
@@ -176,7 +176,7 @@ async function fetchAirQuality(lat, lon, label) {
     timezone: "auto",
   });
 
-  setHtml("aqiOut", emptyState("clock", "Loading air quality…"));
+  if (!quiet) setHtml("aqiOut", emptyState("clock", "Loading air quality…"));
 
   try {
     const res = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?${params}`);
@@ -189,15 +189,17 @@ async function fetchAirQuality(lat, lon, label) {
     renderAqi(aqi, current);
     renderPollutants(current);
     renderForecast(data);
-    showOnMap(lat, lon, label, aqi);
+    showOnMap(lat, lon, label, aqi, keepView);
   } catch (e) {
     console.error(e);
     setHtml("aqiOut", emptyState("alert", `Couldn't load air quality (${e.message}).`));
   }
 }
 
-function useLocation(location) {
-  fetchAirQuality(location.latitude, location.longitude, location.name || "Your location");
+function useLocation(location, source) {
+  fetchAirQuality(location.latitude, location.longitude, location.name || "Your location", {
+    keepView: source === "saved" && OPENED_WITH_MAP_VIEW, // opened from a shared link with a map view
+  });
 }
 
 // ==========================================================================
@@ -216,4 +218,11 @@ document.addEventListener("DOMContentLoaded", () => {
   map = createBaseMap({ center: DEFAULT_CENTER, zoom: 6 });
   renderLegend();
   setupLocationPanel(useLocation);
+
+  // Auto-refresh every 30 minutes (the air quality model updates hourly).
+  autoRefresh(async () => {
+    if (currentLocation) {
+      await fetchAirQuality(currentLocation.latitude, currentLocation.longitude, currentLocation.name || "Your location", { quiet: true });
+    }
+  }, 30);
 });

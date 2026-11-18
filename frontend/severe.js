@@ -238,13 +238,14 @@ const toLatLngs = (coords) => coords.map(([x, y]) => [y, x]);
 
 function stormPopup(a) {
   const knots = Number(attr(a, "maxwind", "Maximum Wind"));
+  const fromKnots = (kt) => `${Math.round(kt * (METRIC ? 1.852 : 1.15078))} ${UNIT.wind}`;
   const gust = Number(attr(a, "gust", "Wind Gust"));
   const pressure = attr(a, "mslp", "Mean Sea Level Pressure");
   return popupHtml(attr(a, "stormname", "Storm Name") || "Tropical system", [
     ["Type", STORM_TYPES[attr(a, "dvlbl", "Forecast Storm Type")] || attr(a, "stormtype", "Storm Type")],
     ["Time", attr(a, "fldatelbl", "Full Date Label") || attr(a, "datelbl", "Date Label")],
-    ["Max wind", Number.isFinite(knots) && knots > 0 ? `${Math.round(knots * 1.15078)} mph` : null],
-    ["Gusts", Number.isFinite(gust) && gust > 0 ? `${Math.round(gust * 1.15078)} mph` : null],
+    ["Max wind", Number.isFinite(knots) && knots > 0 ? fromKnots(knots) : null],
+    ["Gusts", Number.isFinite(gust) && gust > 0 ? fromKnots(gust) : null],
     ["Pressure", pressure && Number(pressure) < 9000 ? `${pressure} mb` : null],
   ]);
 }
@@ -281,7 +282,7 @@ async function loadTropical() {
       if (/Cone$/.test(r.layerName) && g.rings) {
         cones.push(
           L.polygon(g.rings.map(toLatLngs), {
-            color: "#134b70",
+            color: "#2a78d6",
             weight: 1.5,
             dashArray: "5 5",
             fillColor: "#2a78d6",
@@ -293,7 +294,7 @@ async function loadTropical() {
       } else if (/Points$/.test(r.layerName) && Number.isFinite(g.x)) {
         const label = attr(r.attributes, "datelbl", "Date Label");
         points.push(
-          L.circleMarker([g.y, g.x], { radius: 6, color: "#ffffff", weight: 2, fillColor: "#134b70", fillOpacity: 1 })
+          L.circleMarker([g.y, g.x], { radius: 6, color: "#ffffff", weight: 2, fillColor: "#2a78d6", fillOpacity: 1 })
             .bindPopup(stormPopup(r.attributes))
             .bindTooltip(escapeHtml(`${name || "Storm"}${label ? ` · ${label}` : ""}`), { direction: "top" })
         );
@@ -384,7 +385,7 @@ function renderLegend() {
     Object.values(LEVELS)
       .map((l) => `<div class="legend-row"><span class="swatch" style="background:${l.color}"></span>${l.label}</div>`)
       .join("") +
-      `<div class="legend-row"><span class="swatch" style="background:rgba(42,120,214,.15);box-shadow:inset 0 0 0 1.5px #134b70;border-radius:3px"></span>Storm forecast cone</div>`
+      `<div class="legend-row"><span class="swatch" style="background:rgba(42,120,214,.15);box-shadow:inset 0 0 0 1.5px #2a78d6;border-radius:3px"></span>Storm forecast cone</div>`
   );
 }
 
@@ -406,4 +407,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadAlerts();
   loadTropical();
+
+  // Auto-refresh alerts, storms and local alerts every 5 minutes.
+  autoRefresh(async () => {
+    await Promise.all([loadAlerts(), loadTropical()]);
+    if (currentLocation) await loadLocalAlerts(currentLocation);
+  }, 5);
 });
