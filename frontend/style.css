@@ -218,19 +218,60 @@ a {
   margin-right: -4px;
 }
 
-/* Radar animation player (Weather map) */
+/* Radar animation player: floating card, bottom left of the Weather map */
 .radar-player {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 4px 8px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+  position: absolute;
+  left: 12px;
+  bottom: 34px; /* clear the map attribution line */
+  z-index: 1000;
+  width: min(320px, calc(100% - 24px));
+  transition: opacity 0.15s;
 }
 
 .radar-player[hidden] {
   display: none;
+}
+
+@media (max-width: 760px) {
+  .radar-player {
+    bottom: 46px; /* attribution wraps to two lines on phones */
+  }
+}
+
+.radar-player-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.radar-player-head .map-card-title {
+  margin-bottom: 6px;
+}
+
+.radar-player-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.radar-hint {
+  display: none;
+}
+
+/* Greyed out while the precipitation layer is off */
+.radar-player.is-disabled .radar-player-controls,
+.radar-player.is-disabled .radar-time {
+  opacity: 0.4;
+}
+
+.radar-player.is-disabled .radar-hint {
+  display: block;
+}
+
+.radar-player button:disabled {
+  cursor: not-allowed;
 }
 
 .radar-player .btn-icon {
@@ -258,7 +299,6 @@ a {
 }
 
 .radar-time {
-  grid-column: 2;
   color: var(--ink-2);
   font-size: 11px;
   font-weight: 600;

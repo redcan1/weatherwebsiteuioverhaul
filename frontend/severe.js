@@ -103,34 +103,44 @@ function countAlerts(features, sigs) {
   return ids.size;
 }
 
-let tropicalSummary = null; // { count, names } once loaded
+let tropicalSummary = null; // { count, names } once loaded, { failed: true } on error
+let alertsLoaded = false; // until then, show "—" rather than counts of an empty list
 
 function renderStats() {
   const features = visibleAlerts();
   const storms = tropicalSummary;
+  const count = (sigs) => (alertsLoaded ? formatNumber(countAlerts(features, sigs)) : "—");
+  const stormValue = !storms || storms.failed ? "—" : formatNumber(storms.count);
+  const stormNote = !storms
+    ? "Loading…"
+    : storms.failed
+      ? "Unavailable right now"
+      : storms.count
+        ? escapeHtml(storms.names.join(", "))
+        : "None active right now";
 
   setHtml(
     "alertStats",
     `
     <div class="stat">
       <div class="stat-label"><span class="swatch" style="background:${LEVELS.W.color}"></span>Warnings</div>
-      <div class="stat-value">${formatNumber(countAlerts(features, [LEVELS.W]))}</div>
+      <div class="stat-value">${count([LEVELS.W])}</div>
       <div class="stat-note">Hazard happening or imminent</div>
     </div>
     <div class="stat">
       <div class="stat-label"><span class="swatch" style="background:${LEVELS.A.color}"></span>Watches</div>
-      <div class="stat-value">${formatNumber(countAlerts(features, [LEVELS.A]))}</div>
+      <div class="stat-value">${count([LEVELS.A])}</div>
       <div class="stat-note">Conditions favor the hazard</div>
     </div>
     <div class="stat">
       <div class="stat-label"><span class="swatch" style="background:${LEVELS.Y.color}"></span>Advisories &amp; statements</div>
-      <div class="stat-value">${formatNumber(countAlerts(features, [LEVELS.Y, LEVELS.S]))}</div>
+      <div class="stat-value">${count([LEVELS.Y, LEVELS.S])}</div>
       <div class="stat-note">Less serious, still worth knowing</div>
     </div>
     <div class="stat">
       <div class="stat-label">${icon("storm")}Tropical storms</div>
-      <div class="stat-value">${storms ? formatNumber(storms.count) : "—"}</div>
-      <div class="stat-note">${storms ? (storms.count ? escapeHtml(storms.names.join(", ")) : "None active right now") : "Loading…"}</div>
+      <div class="stat-value">${stormValue}</div>
+      <div class="stat-note">${stormNote}</div>
     </div>
   `
   );
@@ -189,6 +199,7 @@ async function loadAlerts() {
   setText("wxStatus", "Loading alerts…");
   try {
     alertFeatures = await fetchAlertZones();
+    alertsLoaded = true;
     renderAlerts();
     setText("wxStatus", `Alerts updated ${nowClock()}`);
   } catch (e) {
@@ -297,7 +308,7 @@ async function loadTropical() {
     setText("tropicalNote", names.size ? `Active: ${[...names].join(", ")}.` : "No active tropical storms right now.");
   } catch (e) {
     console.error("Tropical data unavailable:", e);
-    tropicalSummary = { count: 0, names: [] };
+    tropicalSummary = { failed: true };
     setText("tropicalNote", "Tropical storm data is unavailable right now.");
   }
   renderStats();

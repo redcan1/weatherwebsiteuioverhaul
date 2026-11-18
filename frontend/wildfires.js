@@ -6,6 +6,7 @@ let fireDots = null;
 let userMarker = null;
 let userLocation = null;
 let fires = [];
+let firesLoaded = false; // key figures stay "—" until the first successful load
 
 // WFIGS Current Interagency Fire Perimeters (ArcGIS FeatureServer query endpoint)
 const WFIGS_CURRENT_URL =
@@ -126,7 +127,7 @@ function renderStats() {
     </div>
     <div class="stat">
       <div class="stat-label">${icon("alert")}Largest</div>
-      <div class="stat-value">${largest ? formatNumber(largest.acres) : "—"}<span class="stat-unit">ac</span></div>
+      <div class="stat-value">${largest ? `${formatNumber(largest.acres)}<span class="stat-unit">ac</span>` : "—"}</div>
       <div class="stat-note">${largest ? escapeHtml(largest.name) : "—"}</div>
     </div>
     <div class="stat">
@@ -205,6 +206,7 @@ async function loadPerimeters() {
     }).addTo(map);
 
     fires.sort((a, b) => b.acres - a.acres);
+    firesLoaded = true;
 
     // One dot per fire so small fires stay visible when zoomed out. Largest drawn first.
     fireDots = L.layerGroup(
@@ -243,7 +245,7 @@ function useLocation(location, source) {
   userMarker?.remove();
   userMarker = locationMarker(latLng, location.name || "Your location").addTo(map);
 
-  renderStats();
+  if (firesLoaded) renderStats();
 
   // A saved location shouldn't override the national overview on page load.
   if (source === "saved") return;

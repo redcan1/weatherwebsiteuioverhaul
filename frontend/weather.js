@@ -404,6 +404,15 @@ function setRadarPlaying(playing) {
   radar.timer = setTimeout(step, FRAME_MS);
 }
 
+// The player (bottom-left card) is greyed out and inactive while radar is off.
+function setRadarPlayerEnabled(enabled) {
+  $("radarPlayer")?.classList.toggle("is-disabled", !enabled);
+  for (const id of ["btnRadarPlay", "radarSlider"]) {
+    const el = $(id);
+    if (el) el.disabled = !enabled;
+  }
+}
+
 function setRadarVisible(visible) {
   if (visible) {
     radar.layers.forEach((layer) => layer.addTo(map));
@@ -412,15 +421,7 @@ function setRadarVisible(visible) {
     setRadarPlaying(false);
     radar.layers.forEach((layer) => map.removeLayer(layer));
   }
-}
-
-// The player is always shown once frames load; using it switches radar on.
-function ensureRadarOn() {
-  const toggle = $("toggleRadar");
-  if (toggle && !toggle.checked) {
-    toggle.checked = true;
-    setRadarVisible(true);
-  }
+  setRadarPlayerEnabled(visible);
 }
 
 function setupRadarControls() {
@@ -431,15 +432,11 @@ function setupRadarControls() {
   if (slider) {
     slider.max = String(radar.frames.length - 1);
     slider.addEventListener("input", () => {
-      ensureRadarOn();
       setRadarPlaying(false);
       showRadarFrame(Number(slider.value));
     });
   }
-  button?.addEventListener("click", () => {
-    ensureRadarOn();
-    setRadarPlaying(radar.timer === null);
-  });
+  button?.addEventListener("click", () => setRadarPlaying(radar.timer === null));
   setRadarPlaying(false); // draw the play icon
   showRadarFrame(radar.index); // label the slider with the latest frame time
   radar.layers[radar.index].setOpacity(0); // ...but stay invisible until radar is on
@@ -448,6 +445,7 @@ function setupRadarControls() {
     toggle.disabled = false;
     toggle.addEventListener("change", () => setRadarVisible(toggle.checked));
   }
+  setRadarPlayerEnabled(false);
   const player = $("radarPlayer");
   if (player) player.hidden = false;
 }

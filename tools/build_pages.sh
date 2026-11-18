@@ -143,11 +143,6 @@ $LOCATION_PANEL
           <div class="map-card">
             <div class="map-card-title">Map layers</div>
             <label class="switch"><input type="checkbox" id="toggleRadar" disabled> Precipitation radar</label>
-            <div id="radarPlayer" class="radar-player" hidden>
-              <button id="btnRadarPlay" class="btn btn-icon" type="button" aria-label="Play radar animation"></button>
-              <input id="radarSlider" type="range" min="0" max="0" step="1" value="0" aria-label="Radar time">
-              <span id="radarTime" class="radar-time" aria-live="off"></span>
-            </div>
             <label class="switch"><input type="checkbox" id="toggleClouds" disabled> Satellite (clouds)</label>
             <label class="switch"><input type="checkbox" id="toggleHumidity"> Humidity (regional)</label>
             <p id="layerNote" class="map-card-note">Loading layers…</p>
@@ -157,6 +152,17 @@ $LOCATION_PANEL
             <div id="humidityLegend"></div>
             <p id="humidityNote" class="map-card-note">Pick a location to map humidity around it.</p>
           </div>
+        </div>
+        <div id="radarPlayer" class="map-card radar-player is-disabled" hidden>
+          <div class="radar-player-head">
+            <span class="map-card-title">Radar · past 2 hours</span>
+            <span id="radarTime" class="radar-time" aria-live="off"></span>
+          </div>
+          <div class="radar-player-controls">
+            <button id="btnRadarPlay" class="btn btn-icon" type="button" aria-label="Play radar animation" disabled></button>
+            <input id="radarSlider" type="range" min="0" max="0" step="1" value="0" aria-label="Radar time" disabled>
+          </div>
+          <p class="radar-hint map-card-note">Turn on Precipitation radar to play.</p>
         </div>
       </section>
     </div>
