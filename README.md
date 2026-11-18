@@ -1,6 +1,6 @@
 # The Nerd Map
 
-A static website that shows live environmental data on interactive maps: weather, severe weather alerts, hurricanes, wildfires, earthquakes, air quality, natural events and the aurora.
+A static website that shows live environmental data on interactive maps: weather, severe weather alerts, hurricanes, wildfires, earthquakes, air quality, natural events, the aurora, tides and the ISS.
 
 ## Running it
 
@@ -36,6 +36,8 @@ It overwrites the `.html` files in `frontend/`, so don't edit those by hand. Pag
 | `air.html` + `air.js` | US AQI, pollutant levels and a 24-hour AQI forecast |
 | `events.html` + `events.js` | NASA EONET natural events worldwide, with category filters and storm tracks |
 | `aurora.html` + `aurora.js` | NOAA OVATION aurora probability map, viewing chance and Kp index chart |
+| `ocean.html` + `ocean.js` | Nearest NOAA tide station, upcoming tides, tide chart, waves/swell/sea temperature |
+| `iss.html` + `iss.js` | Live ISS position, ground track, footprint and passes over you (computed in the browser with satellite.js) |
 | `about.html` | What the site is and where every piece of data comes from |
 
 The location a visitor picks is saved in `localStorage`, so every page opens on the same place.
@@ -51,6 +53,9 @@ All sources are free and need no API key. See `about.html` for details.
 - **National Hurricane Center**: storm forecast points, track and cone from NOAA's tropical map service (one `identify` request covers all 15 storm slots)
 - **NASA EONET**: open natural events (storms, wildfires, volcanoes, sea ice…)
 - **NOAA SWPC**: OVATION aurora forecast grid and planetary Kp index (observed + forecast)
+- **NOAA Tides & Currents**: tide stations and predictions (station list cached in the browser for a week)
+- **Open-Meteo Marine**: waves, swell and sea surface temperature
+- **CelesTrak** (backup: wheretheiss.at): ISS orbital elements; positions and passes computed with satellite.js 5.0.0 from cdnjs
 - **NIFC WFIGS**: current interagency fire perimeters
 - **USGS**: FDSN earthquake event service
 - **Esri ArcGIS Online**: Light Gray Canvas and World Street Map basemaps

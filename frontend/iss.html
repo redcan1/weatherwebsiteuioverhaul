@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ISS Tracker · The Nerd Map</title>
+  <meta name="description" content="Where the International Space Station is right now, its orbit path, and when it passes over you.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="common.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/5.0.0/satellite.min.js" defer></script>
+  <script src="iss.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="The Nerd Map home">
+        <img src="thenerdmap.png" alt="The Nerd Map" width="122" height="52">
+      </a>
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="index.html"><svg data-icon="cloud-sun"></svg><span>Weather</span></a>
+        <a class="tab" href="severe.html"><svg data-icon="alert"></svg><span>Severe Weather</span></a>
+        <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
+        <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
+        <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
+        <a class="tab" href="events.html"><svg data-icon="map"></svg><span>Natural Events</span></a>
+        <a class="tab" href="aurora.html"><svg data-icon="sun"></svg><span>Aurora</span></a>
+        <a class="tab" href="ocean.html"><svg data-icon="waves"></svg><span>Ocean</span></a>
+        <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
+        <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    <div class="page-head">
+      <div>
+        <p class="eyebrow"><span class="live-dot"></span>Live, updated every second</p>
+        <h1>ISS tracker</h1>
+        <p class="lede">Where the International Space Station is right now, where it's heading, and when you can see it pass over your location.</p>
+      </div>
+      <div class="sources">Data from <a href="https://celestrak.org/" target="_blank" rel="noopener">CelesTrak</a></div>
+    </div>
+
+    <div id="issStats" class="kpis" aria-live="off">
+      <div class="stat"><div class="stat-label">Altitude</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Speed</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Position</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Next visible pass</div><div class="stat-value">—</div></div>
+    </div>
+
+    <div class="dashboard">
+      <div class="stack">
+        <section class="panel" aria-labelledby="locHeading">
+          <div class="panel-head"><h2 id="locHeading">Location</h2></div>
+          <div class="search-field">
+            <svg data-icon="search"></svg>
+            <input id="cityInput" type="search" placeholder="Search for a city" autocomplete="off" aria-label="Search for a city">
+            <button id="btnCitySearch" class="btn btn-primary" type="button">Search</button>
+          </div>
+          <div id="cityResults" class="results" aria-live="polite"></div>
+          <div class="divider">or</div>
+          <button id="btnLocation" class="btn btn-secondary btn-block" type="button"><svg data-icon="navigation"></svg>Use my current location</button>
+          <div id="locCard" class="loc-card is-empty">
+            <svg data-icon="map-pin"></svg>
+            <div>
+              <div id="locName" class="loc-name">No location selected</div>
+              <div id="locResult" class="loc-meta">Search for a city or use your current location.</div>
+            </div>
+          </div>
+          <p id="locStatus" class="status" role="status" hidden></p>
+        </section>
+        <section class="panel" aria-labelledby="passHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="passHeading">Passes over you</h2>
+              <p id="passSub" class="panel-sub">Next 3 days</p>
+            </div>
+          </div>
+          <div id="passList"><div class="empty"><svg data-icon="map-pin"></svg><p>Choose a location to see when the ISS passes over.</p></div></div>
+        </section>
+      </div>
+
+      <section class="panel map-panel" aria-label="ISS map">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="map-card">
+            <div class="map-card-title">Tracking</div>
+            <label class="switch"><input type="checkbox" id="toggleFollow" checked> Follow the ISS</label>
+            <div class="legend-row" style="margin-top:10px"><span class="swatch" style="background:#c0612a"></span>Next 95 minutes</div>
+            <div class="legend-row"><span class="swatch" style="background:#134b70;opacity:.5"></span>Last 45 minutes</div>
+            <div class="legend-row"><span class="swatch" style="background:rgba(192,97,42,.15);box-shadow:inset 0 0 0 1px #c0612a"></span>Can see the ISS now</div>
+            <p id="issNote" class="map-card-note">Loading orbit data…</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>The Nerd Map · Live environmental data from public sources</span>
+      <span>Data: Open-Meteo, NOAA, NASA, USGS, NIFC, RainViewer and CelesTrak · <a href="about.html">About the data</a></span>
+    </div>
+  </footer>
+</body>
+</html>

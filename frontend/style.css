@@ -195,8 +195,33 @@ a {
   box-shadow: 0 0 0 2px var(--surface);
 }
 
-/* Nine tabs: drop the icons and tighten padding on laptop-width screens */
-@media (max-width: 1320px) {
+/* ISS tracker: station marker and pass list */
+.iss-icon {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 0 0 3px #fff, var(--shadow);
+}
+
+.iss-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.badge.visible {
+  background: #e3f4e8;
+  color: #0f7b3f;
+}
+
+.level-tag.good {
+  background: #e3f4e8;
+  color: #0f7b3f;
+}
+
+/* Ten tabs: drop the icons and tighten padding below wide-desktop widths */
+@media (max-width: 1520px) {
   .tabs .tab .icon {
     display: none;
   }

@@ -58,6 +58,8 @@ ${script_tags}</head>
         <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
         <a class="tab" href="events.html"><svg data-icon="map"></svg><span>Natural Events</span></a>
         <a class="tab" href="aurora.html"><svg data-icon="sun"></svg><span>Aurora</span></a>
+        <a class="tab" href="ocean.html"><svg data-icon="waves"></svg><span>Ocean</span></a>
+        <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
         <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
       </nav>
     </div>
@@ -70,7 +72,7 @@ $(cat)
   <footer class="site-footer">
     <div class="container footer-inner">
       <span>The Nerd Map · Live environmental data from public sources</span>
-      <span>Data: Open-Meteo, NOAA, NASA, RainViewer, NIFC and USGS · <a href="about.html">About the data</a></span>
+      <span>Data: Open-Meteo, NOAA, NASA, USGS, NIFC, RainViewer and CelesTrak · <a href="about.html">About the data</a></span>
     </div>
   </footer>
 </body>
@@ -414,6 +416,115 @@ $LOCATION_PANEL
 EOF
 
 # --------------------------------------------------------------------------
+# Ocean
+# --------------------------------------------------------------------------
+page ocean.html "Ocean" "Tide times and heights from the nearest NOAA station, plus waves, swell and sea temperature." "charts.js ocean.js" yes <<EOF
+$(head_block "Live conditions" "Ocean" "Tide times and heights from your nearest NOAA tide station, plus waves, swell and sea temperature along the coast." "$(src https://tidesandcurrents.noaa.gov/ "NOAA Tides &amp; Currents")$(src https://open-meteo.com/en/docs/marine-weather-api "Open-Meteo Marine")")
+
+    <div id="oceanStats" class="kpis" aria-live="polite">
+      <div class="stat"><div class="stat-label">Next high tide</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Next low tide</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Wave height</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Sea temperature</div><div class="stat-value">—</div></div>
+    </div>
+
+    <div class="dashboard">
+      <div class="stack">
+$LOCATION_PANEL
+        <section class="panel" aria-labelledby="stationHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="stationHeading">Tide station</h2>
+              <p id="stationSub" class="panel-sub">The nearest station to your location</p>
+            </div>
+          </div>
+          <div id="stationOut">$(empty waves "Choose a location to find its nearest tide station.")</div>
+        </section>
+        <section class="panel" aria-labelledby="tideTableHeading">
+          <div class="panel-head"><h2 id="tideTableHeading">Upcoming tides</h2></div>
+          <div id="tideTable">$(empty clock "High and low tides appear once a station is selected.")</div>
+        </section>
+      </div>
+
+      <section class="panel map-panel" aria-label="Tide station map">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="map-card">
+            <div class="map-card-title">Legend</div>
+            <div id="oceanLegend"></div>
+            <p id="stationCount" class="map-card-note">Loading tide stations…</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="row row-2">
+      <section class="panel" aria-labelledby="tideChartHeading">
+        <div class="panel-head">
+          <div>
+            <h2 id="tideChartHeading">Tide, next 24 hours</h2>
+            <p id="tideChartSub" class="panel-sub">Predicted height in feet above mean lower low water (MLLW)</p>
+          </div>
+        </div>
+        <div id="tideChart">$(empty clock "The tide curve appears once a station is selected.")</div>
+      </section>
+
+      <section class="panel" aria-labelledby="marineHeading">
+        <div class="panel-head">
+          <div>
+            <h2 id="marineHeading">Sea conditions</h2>
+            <p class="panel-sub">Waves, swell and water temperature right now</p>
+          </div>
+        </div>
+        <div id="marineOut">$(empty waves "Sea conditions appear once you pick a location.")</div>
+      </section>
+    </div>
+EOF
+
+# --------------------------------------------------------------------------
+# ISS
+# --------------------------------------------------------------------------
+page iss.html "ISS Tracker" "Where the International Space Station is right now, its orbit path, and when it passes over you." "https://cdnjs.cloudflare.com/ajax/libs/satellite.js/5.0.0/satellite.min.js iss.js" yes <<EOF
+$(head_block "Live, updated every second" "ISS tracker" "Where the International Space Station is right now, where it's heading, and when you can see it pass over your location." "$(src https://celestrak.org/ CelesTrak)")
+
+    <div id="issStats" class="kpis" aria-live="off">
+      <div class="stat"><div class="stat-label">Altitude</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Speed</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Position</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Next visible pass</div><div class="stat-value">—</div></div>
+    </div>
+
+    <div class="dashboard">
+      <div class="stack">
+$LOCATION_PANEL
+        <section class="panel" aria-labelledby="passHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="passHeading">Passes over you</h2>
+              <p id="passSub" class="panel-sub">Next 3 days</p>
+            </div>
+          </div>
+          <div id="passList">$(empty map-pin "Choose a location to see when the ISS passes over.")</div>
+        </section>
+      </div>
+
+      <section class="panel map-panel" aria-label="ISS map">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="map-card">
+            <div class="map-card-title">Tracking</div>
+            <label class="switch"><input type="checkbox" id="toggleFollow" checked> Follow the ISS</label>
+            <div class="legend-row" style="margin-top:10px"><span class="swatch" style="background:#c0612a"></span>Next 95 minutes</div>
+            <div class="legend-row"><span class="swatch" style="background:#134b70;opacity:.5"></span>Last 45 minutes</div>
+            <div class="legend-row"><span class="swatch" style="background:rgba(192,97,42,.15);box-shadow:inset 0 0 0 1px #c0612a"></span>Can see the ISS now</div>
+            <p id="issNote" class="map-card-note">Loading orbit data…</p>
+          </div>
+        </div>
+      </section>
+    </div>
+EOF
+
+# --------------------------------------------------------------------------
 # Wildfires
 # --------------------------------------------------------------------------
 page wildfires.html "Wildfires" "Active wildfire perimeters across the United States, with size, containment and distance from you." "wildfires.js" yes <<EOF
@@ -544,6 +655,8 @@ $(feature air.html wind Air "The US Air Quality Index, pollutant levels and a 24
 $(feature severe.html alert "Severe Weather" "US warnings, watches and advisories, plus hurricane tracks and cones.")
 $(feature events.html map "Natural Events" "Storms, wildfires, volcanoes, icebergs and more, worldwide.")
 $(feature aurora.html sun "Aurora" "Where the northern lights may be visible, plus the Kp forecast.")
+$(feature ocean.html waves "Ocean" "Tide times from the nearest NOAA station, plus waves and sea temperature.")
+$(feature iss.html satellite "ISS" "Where the space station is now, and when it passes over you.")
           </div>
         </section>
 
@@ -565,6 +678,9 @@ $(source_card alert https://www.weather.gov/ "National Weather Service" "Officia
 $(source_card storm https://www.nhc.noaa.gov/ "National Hurricane Center" "Forecast positions, track and cone of uncertainty for active tropical storms and hurricanes, served by NOAA's tropical weather map service." "Severe Weather" "Atlantic, East and Central Pacific" "With each advisory, usually every 6 hours (more often near land)")
 $(source_card map https://eonet.gsfc.nasa.gov/ "NASA EONET" "The Earth Observatory Natural Event Tracker, a curated catalog of natural events (storms, wildfires, volcanoes, icebergs and more) linked to their original sources." "Natural Events" "Worldwide" "Daily, as events are added or updated")
 $(source_card sun https://www.swpc.noaa.gov/ "NOAA Space Weather Prediction Center" "The OVATION aurora model's probability of aurora overhead, plus the observed and forecast planetary Kp index of geomagnetic activity." "Aurora" "Worldwide (both hemispheres)" "Aurora every ~30 minutes; Kp every 3 hours")
+$(source_card waves https://tidesandcurrents.noaa.gov/ "NOAA Tides &amp; Currents" "Tide predictions (high and low times and heights, plus a 30-minute tide curve where the station publishes one) for about 3,500 tide stations, from NOAA's Center for Operational Oceanographic Products and Services." "Ocean" "US coasts and territories" "Predictions are computed years ahead; the station list is cached for a week")
+$(source_card wind https://open-meteo.com/en/docs/marine-weather-api "Open-Meteo Marine" "Wave height, period and direction, swell and sea surface temperature from ocean wave models (including ECMWF and NOAA WaveWatch III). For inland locations the nearest tide station's coast is used." "Ocean" "Worldwide oceans and coasts" "Hourly")
+$(source_card satellite https://celestrak.org/ "CelesTrak" "The ISS's current orbital elements (a two-line element set). Position, ground track and passes are then computed in your browser with the open-source satellite.js library (SGP4). wheretheiss.at is used as a backup source." "ISS" "Worldwide" "Orbit data a few times a day; position every second")
 $(source_card activity https://earthquake.usgs.gov/fdsnws/event/1/ "USGS Earthquake Hazards Program" "The U.S. Geological Survey's earthquake catalog, combining the USGS network with contributing seismic networks worldwide." "Seismic" "Worldwide, magnitude 2.5 and above" "Near real time, typically within minutes")
           </div>
         </section>

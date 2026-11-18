@@ -22,6 +22,7 @@ function roundedTopBar(x, y, w, h, r = 4) {
  *   type        "line" | "bar"
  *   data        [{ label, value }]  — label is shown on the x axis / tooltip
  *   yMax        top of the y scale
+ *   yMin        bottom of the y scale (default 0)
  *   yTicks      values for gridlines
  *   color       series colour (line), or colorFor(value) for per-bar colours
  *   formatValue value -> tooltip headline
@@ -50,6 +51,7 @@ function drawChart(container) {
     type = "line",
     data,
     yMax,
+    yMin = 0, // bottom of the y scale (tides can go below zero)
     yTicks,
     color = "var(--series-1)",
     colorFor,
@@ -71,14 +73,14 @@ function drawChart(container) {
 
   const step = type === "bar" ? w / data.length : w / Math.max(data.length - 1, 1);
   const xCenter = (i) => (type === "bar" ? m.left + step * i + step / 2 : m.left + step * i);
-  const y = (v) => m.top + h - (Math.max(0, Math.min(v, yMax)) / yMax) * h;
+  const y = (v) => m.top + h - ((Math.max(yMin, Math.min(v, yMax)) - yMin) / (yMax - yMin)) * h;
 
   const svg = svgEl("svg", { width, height, viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": ariaLabel });
 
   // Gridlines + y labels (recessive)
   for (const t of yTicks) {
     svg.append(
-      svgEl("line", { class: t === 0 ? "baseline" : "grid-line", x1: m.left, x2: width - m.right, y1: y(t), y2: y(t) })
+      svgEl("line", { class: t === yMin ? "baseline" : "grid-line", x1: m.left, x2: width - m.right, y1: y(t), y2: y(t) })
     );
     const label = svgEl("text", { class: "tick", x: m.left - 8, y: y(t) + 4, "text-anchor": "end" });
     label.textContent = t;
@@ -98,7 +100,7 @@ function drawChart(container) {
   if (type === "line") {
     const points = data.map((d, i) => [xCenter(i), y(d.value)]);
     const line = points.map(([px, py], i) => `${i ? "L" : "M"}${px},${py}`).join("");
-    const baseY = y(0);
+    const baseY = y(yMin);
     svg.append(
       svgEl("path", {
         d: `${line}L${points[points.length - 1][0]},${baseY}L${points[0][0]},${baseY}Z`,

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ocean · The Nerd Map</title>
+  <meta name="description" content="Tide times and heights from the nearest NOAA station, plus waves, swell and sea temperature.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="common.js" defer></script>
+  <script src="charts.js" defer></script>
+  <script src="ocean.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="The Nerd Map home">
+        <img src="thenerdmap.png" alt="The Nerd Map" width="122" height="52">
+      </a>
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="index.html"><svg data-icon="cloud-sun"></svg><span>Weather</span></a>
+        <a class="tab" href="severe.html"><svg data-icon="alert"></svg><span>Severe Weather</span></a>
+        <a class="tab" href="wildfires.html"><svg data-icon="flame"></svg><span>Wildfires</span></a>
+        <a class="tab" href="seismic.html"><svg data-icon="activity"></svg><span>Seismic</span></a>
+        <a class="tab" href="air.html"><svg data-icon="wind"></svg><span>Air</span></a>
+        <a class="tab" href="events.html"><svg data-icon="map"></svg><span>Natural Events</span></a>
+        <a class="tab" href="aurora.html"><svg data-icon="sun"></svg><span>Aurora</span></a>
+        <a class="tab" href="ocean.html"><svg data-icon="waves"></svg><span>Ocean</span></a>
+        <a class="tab" href="iss.html"><svg data-icon="satellite"></svg><span>ISS</span></a>
+        <a class="tab" href="about.html"><svg data-icon="info"></svg><span>About</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    <div class="page-head">
+      <div>
+        <p class="eyebrow"><span class="live-dot"></span>Live conditions</p>
+        <h1>Ocean</h1>
+        <p class="lede">Tide times and heights from your nearest NOAA tide station, plus waves, swell and sea temperature along the coast.</p>
+      </div>
+      <div class="sources">Data from <a href="https://tidesandcurrents.noaa.gov/" target="_blank" rel="noopener">NOAA Tides &amp; Currents</a><a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine</a></div>
+    </div>
+
+    <div id="oceanStats" class="kpis" aria-live="polite">
+      <div class="stat"><div class="stat-label">Next high tide</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Next low tide</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Wave height</div><div class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Sea temperature</div><div class="stat-value">—</div></div>
+    </div>
+
+    <div class="dashboard">
+      <div class="stack">
+        <section class="panel" aria-labelledby="locHeading">
+          <div class="panel-head"><h2 id="locHeading">Location</h2></div>
+          <div class="search-field">
+            <svg data-icon="search"></svg>
+            <input id="cityInput" type="search" placeholder="Search for a city" autocomplete="off" aria-label="Search for a city">
+            <button id="btnCitySearch" class="btn btn-primary" type="button">Search</button>
+          </div>
+          <div id="cityResults" class="results" aria-live="polite"></div>
+          <div class="divider">or</div>
+          <button id="btnLocation" class="btn btn-secondary btn-block" type="button"><svg data-icon="navigation"></svg>Use my current location</button>
+          <div id="locCard" class="loc-card is-empty">
+            <svg data-icon="map-pin"></svg>
+            <div>
+              <div id="locName" class="loc-name">No location selected</div>
+              <div id="locResult" class="loc-meta">Search for a city or use your current location.</div>
+            </div>
+          </div>
+          <p id="locStatus" class="status" role="status" hidden></p>
+        </section>
+        <section class="panel" aria-labelledby="stationHeading">
+          <div class="panel-head">
+            <div>
+              <h2 id="stationHeading">Tide station</h2>
+              <p id="stationSub" class="panel-sub">The nearest station to your location</p>
+            </div>
+          </div>
+          <div id="stationOut"><div class="empty"><svg data-icon="waves"></svg><p>Choose a location to find its nearest tide station.</p></div></div>
+        </section>
+        <section class="panel" aria-labelledby="tideTableHeading">
+          <div class="panel-head"><h2 id="tideTableHeading">Upcoming tides</h2></div>
+          <div id="tideTable"><div class="empty"><svg data-icon="clock"></svg><p>High and low tides appear once a station is selected.</p></div></div>
+        </section>
+      </div>
+
+      <section class="panel map-panel" aria-label="Tide station map">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="map-card">
+            <div class="map-card-title">Legend</div>
+            <div id="oceanLegend"></div>
+            <p id="stationCount" class="map-card-note">Loading tide stations…</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="row row-2">
+      <section class="panel" aria-labelledby="tideChartHeading">
+        <div class="panel-head">
+          <div>
+            <h2 id="tideChartHeading">Tide, next 24 hours</h2>
+            <p id="tideChartSub" class="panel-sub">Predicted height in feet above mean lower low water (MLLW)</p>
+          </div>
+        </div>
+        <div id="tideChart"><div class="empty"><svg data-icon="clock"></svg><p>The tide curve appears once a station is selected.</p></div></div>
+      </section>
+
+      <section class="panel" aria-labelledby="marineHeading">
+        <div class="panel-head">
+          <div>
+            <h2 id="marineHeading">Sea conditions</h2>
+            <p class="panel-sub">Waves, swell and water temperature right now</p>
+          </div>
+        </div>
+        <div id="marineOut"><div class="empty"><svg data-icon="waves"></svg><p>Sea conditions appear once you pick a location.</p></div></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>The Nerd Map · Live environmental data from public sources</span>
+      <span>Data: Open-Meteo, NOAA, NASA, USGS, NIFC, RainViewer and CelesTrak · <a href="about.html">About the data</a></span>
+    </div>
+  </footer>
+</body>
+</html>
