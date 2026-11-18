@@ -405,15 +405,21 @@ function setRadarPlaying(playing) {
 }
 
 function setRadarVisible(visible) {
-  const player = $("radarPlayer");
   if (visible) {
     radar.layers.forEach((layer) => layer.addTo(map));
     showRadarFrame(radar.index);
-    if (player) player.hidden = false;
   } else {
     setRadarPlaying(false);
     radar.layers.forEach((layer) => map.removeLayer(layer));
-    if (player) player.hidden = true;
+  }
+}
+
+// The player is always shown once frames load; using it switches radar on.
+function ensureRadarOn() {
+  const toggle = $("toggleRadar");
+  if (toggle && !toggle.checked) {
+    toggle.checked = true;
+    setRadarVisible(true);
   }
 }
 
@@ -425,17 +431,25 @@ function setupRadarControls() {
   if (slider) {
     slider.max = String(radar.frames.length - 1);
     slider.addEventListener("input", () => {
+      ensureRadarOn();
       setRadarPlaying(false);
       showRadarFrame(Number(slider.value));
     });
   }
-  button?.addEventListener("click", () => setRadarPlaying(radar.timer === null));
+  button?.addEventListener("click", () => {
+    ensureRadarOn();
+    setRadarPlaying(radar.timer === null);
+  });
   setRadarPlaying(false); // draw the play icon
+  showRadarFrame(radar.index); // label the slider with the latest frame time
+  radar.layers[radar.index].setOpacity(0); // ...but stay invisible until radar is on
 
   if (toggle) {
     toggle.disabled = false;
     toggle.addEventListener("change", () => setRadarVisible(toggle.checked));
   }
+  const player = $("radarPlayer");
+  if (player) player.hidden = false;
 }
 
 const GIBS = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best";

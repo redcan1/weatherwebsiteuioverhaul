@@ -36,6 +36,7 @@ const ICONS = {
   alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"/>',
   map: '<path d="M14.1 6.03a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 5.1v12.28a1 1 0 0 1-.55.9l-4.56 2.28a2 2 0 0 1-1.79 0l-4.21-2.1a2 2 0 0 0-1.79 0l-3.66 1.83A1 1 0 0 1 3 19.38V7.1a1 1 0 0 1 .55-.9l4.56-2.28a2 2 0 0 1 1.79 0zM15 5.76v15M9 3.24v15"/>',
   clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  locate: '<path d="M2 12h3M19 12h3M12 2v3M12 19v3"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/>',
   play: '<path d="M6 3.5v17a.5.5 0 0 0 .77.42l13.5-8.5a.5.5 0 0 0 0-.84L6.77 3.08A.5.5 0 0 0 6 3.5Z"/>',
   pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
   maximize: '<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>',
@@ -195,11 +196,50 @@ function createBaseMap({ center = DEFAULT_CENTER, zoom = 8, basemap = "light" } 
   }
 
   addFullscreenControl(map);
+  addRecenterControl(map);
 
   // The map sits inside a grid layout, so recalculate its size once layout settles.
   setTimeout(() => map.invalidateSize(), 100);
 
   return map;
+}
+
+// "Center on my location" button (under the full-screen button). Hidden until a
+// location is chosen; selectLocation() keeps it pointed at the latest one.
+let recenter = null; // { map, bar, button, location }
+
+function addRecenterControl(map) {
+  const control = L.control({ position: "topleft" });
+  control.onAdd = () => {
+    const bar = L.DomUtil.create("div", "leaflet-bar");
+    const button = L.DomUtil.create("a", "map-icon-btn", bar);
+    button.href = "#";
+    button.setAttribute("role", "button");
+    button.innerHTML = icon("locate");
+    bar.hidden = true;
+
+    L.DomEvent.disableClickPropagation(bar);
+    L.DomEvent.on(button, "click", (e) => {
+      L.DomEvent.preventDefault(e);
+      const loc = recenter?.location;
+      if (!loc) return;
+      // Keep the user's zoom if they're already zoomed in closer.
+      map.flyTo([loc.latitude, loc.longitude], Math.max(map.getZoom(), 7), { duration: 0.8 });
+    });
+
+    recenter = { map, bar, button, location: null };
+    return bar;
+  };
+  control.addTo(map);
+}
+
+function updateRecenterControl(location) {
+  if (!recenter) return;
+  recenter.location = location;
+  const label = `Center on ${location.name ? location.name.split(",")[0] : "your location"}`;
+  recenter.button.title = label;
+  recenter.button.setAttribute("aria-label", label);
+  recenter.bar.hidden = false;
 }
 
 // Full-screen button (under the zoom buttons). Expands the whole map panel so the
@@ -242,7 +282,7 @@ function addFullscreenControl(map) {
   const control = L.control({ position: "topleft" });
   control.onAdd = () => {
     const bar = L.DomUtil.create("div", "leaflet-bar");
-    button = L.DomUtil.create("a", "map-fullscreen-btn", bar);
+    button = L.DomUtil.create("a", "map-icon-btn map-fullscreen-btn", bar);
     button.href = "#";
     button.setAttribute("role", "button");
     L.DomEvent.disableClickPropagation(bar);
@@ -329,6 +369,7 @@ function selectLocation(location, source, onLocation) {
     saveLocation(location);
     updateAlertBadge(location);
   }
+  updateRecenterControl(location);
   showLocation(location);
   setLocationStatus("");
   onLocation(location, source);

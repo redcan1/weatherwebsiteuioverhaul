@@ -1296,12 +1296,17 @@ body.map-fullscreen-open {
   overflow: hidden;
 }
 
-.leaflet-bar a.map-fullscreen-btn {
+/* Icon buttons in Leaflet bars: full screen, center on my location */
+.leaflet-bar a.map-icon-btn {
   display: grid;
   place-items: center;
 }
 
-.map-fullscreen-btn .icon {
+.leaflet-bar[hidden] {
+  display: none;
+}
+
+.map-icon-btn .icon {
   width: 16px;
   height: 16px;
   stroke-width: 2;
